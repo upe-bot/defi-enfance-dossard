@@ -22,63 +22,94 @@ const HEADERS = {
   'client-secret': OHME_CLIENT_SECRET,
 };
 
-// Charge tous les contacts via pagination cursor
+// ── Charge tous les contacts (pagination cursor) ──────────────────────────────
 async function fetchAllContacts() {
   const all = [];
   let cursor = null;
-
   while (true) {
     const url = cursor
       ? `${OHME_BASE}/api/v1/contacts?limit=500&cursor=${encodeURIComponent(cursor)}`
       : `${OHME_BASE}/api/v1/contacts?limit=500`;
-
     const res = await fetch(url, { headers: HEADERS });
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`Ohme ${res.status}: ${err}`);
-    }
-
-    const json = await res.json();
+    if (!res.ok) throw new Error(`Contacts Ohme ${res.status}`);
+    const json  = await res.json();
     const items = json.data || json.contacts || json || [];
     all.push(...items);
-
-    cursor = json.next_cursor || json.cursor || null;
-    if (!cursor || items.length === 0) break;
+    cursor = json.cursor || (items.length > 0 ? String(items[items.length - 1].id) : null);
+    if (!cursor || items.length < 500) break;
   }
-
   return all;
 }
 
-function fmt(contact) {
-  const f = contact.custom_fields || {};
+// ── Charge tous les paiements type 3 (inscription/don) ───────────────────────
+async function fetchAllPayments() {
+  const all = [];
+  let cursor = null;
+  while (true) {
+    const url = cursor
+      ? `${OHME_BASE}/api/v1/payments?payment_type_id=3&limit=250&since_date=2026-01-01&cursor=${encodeURIComponent(cursor)}`
+      : `${OHME_BASE}/api/v1/payments?payment_type_id=3&limit=250&since_date=2026-01-01`;
+    const res = await fetch(url, { headers: HEADERS });
+    if (!res.ok) throw new Error(`Payments Ohme ${res.status}`);
+    const json  = await res.json();
+    const items = json.data || json || [];
+    all.push(...items);
+    cursor = json.cursor || (items.length > 0 ? String(items[items.length - 1].id) : null);
+    if (!cursor || items.length < 250) break;
+  }
+  return all;
+}
+
+function fmtContact(c) {
+  const f = c.custom_fields || {};
   return {
-    id:      contact.id,
-    prenom:  contact.first_name  || contact.firstname || '',
-    nom:     contact.last_name   || contact.lastname  || '',
+    id:      String(c.id),
+    prenom:  c.first_name  || c.firstname || '',
+    nom:     c.last_name   || c.lastname  || '',
     dossard: f.numero_dossard_angers_2026 ?? null,
-    equipe:  f.equipe || null,
+    equipe:  null,
   };
 }
 
-function hasDossard(c) {
-  return c.dossard !== null && c.dossard !== undefined && c.dossard !== '';
-}
-
-// Cache en mémoire — rechargé toutes les 5 minutes
-let _cache = null;
+// ── Cache en mémoire 5 min ────────────────────────────────────────────────────
+let _cache     = null;
 let _cacheTime = 0;
 const CACHE_TTL = 5 * 60 * 1000;
 
-async function getContacts() {
+async function getData() {
   if (_cache && Date.now() - _cacheTime < CACHE_TTL) return _cache;
-  console.log('Chargement des contacts Ohme...');
-  const raw = await fetchAllContacts();
-  _cache = raw.map(fmt);
+
+  console.log('Chargement contacts + paiements Ohme...');
+  const [rawContacts, rawPayments] = await Promise.all([
+    fetchAllContacts(),
+    fetchAllPayments(),
+  ]);
+
+  // Map contact_id → equipe depuis les paiements
+  const equipeByContactId = new Map();
+  for (const p of rawPayments) {
+    if (!p.contact_id) continue;
+    const cf     = p.custom_fields || p;
+    const equipe = (cf.equipe || '').trim();
+    if (equipe) equipeByContactId.set(String(p.contact_id), equipe);
+  }
+
+  // Construire la liste finale
+  const contacts = rawContacts
+    .map(c => {
+      const fmt = fmtContact(c);
+      fmt.equipe = equipeByContactId.get(fmt.id) || null;
+      return fmt;
+    })
+    .filter(c => c.dossard !== null && c.dossard !== undefined && c.dossard !== '');
+
+  console.log(`${contacts.length} coureurs avec dossard chargés.`);
+  _cache     = contacts;
   _cacheTime = Date.now();
-  console.log(`${_cache.length} contacts chargés.`);
   return _cache;
 }
 
+// ── Routes ────────────────────────────────────────────────────────────────────
 app.get('/health', (_, res) =>
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 );
@@ -89,18 +120,17 @@ app.get('/api/search', async (req, res) => {
     if (!q || q.trim().length < 2)
       return res.status(400).json({ error: 'Au moins 2 caractères requis.' });
 
-    const term = q.trim().toLowerCase();
-    const contacts = await getContacts();
-    let results = [];
+    const term     = q.trim().toLowerCase();
+    const contacts = await getData();
+    let results    = [];
 
     if (type === 'equipe') {
       results = contacts
-        .filter(c => hasDossard(c) && c.equipe && c.equipe.toLowerCase() === term)
+        .filter(c => c.equipe && c.equipe.toLowerCase() === term)
         .sort((a, b) => a.prenom.localeCompare(b.prenom, 'fr'));
     } else {
       results = contacts
         .filter(c => {
-          if (!hasDossard(c)) return false;
           const nom    = c.nom.toLowerCase();
           const prenom = c.prenom.toLowerCase();
           return nom.includes(term) || prenom.includes(term);
@@ -118,8 +148,8 @@ app.get('/api/search', async (req, res) => {
 
 app.get('/api/equipes', async (req, res) => {
   try {
-    const contacts = await getContacts();
-    const equipes = [
+    const contacts = await getData();
+    const equipes  = [
       ...new Set(contacts.map(c => c.equipe).filter(Boolean))
     ].sort((a, b) => a.localeCompare(b, 'fr'));
 
