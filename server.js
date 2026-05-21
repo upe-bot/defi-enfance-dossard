@@ -160,6 +160,17 @@ app.get('/api/equipes', async (req, res) => {
   }
 });
 
+app.get('/api/debug', async (req, res) => {
+  const raw = await fetchAllContacts();
+  const sample = raw.slice(0, 3).map(c => ({
+    id: c.id,
+    prenom: c.first_name,
+    nom: c.last_name,
+    custom_fields: c.custom_fields,
+  }));
+  res.json(sample);
+});
+
 app.listen(PORT, () =>
   console.log(`Défi Enfance API démarrée sur le port ${PORT}`)
 );
