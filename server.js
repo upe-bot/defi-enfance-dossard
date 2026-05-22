@@ -204,6 +204,27 @@ async function getData() {
   return [];
 }
 
+async function saveToRedis_key(key, str, ttlSec) {
+  try {
+    const res = await fetch(`${UPSTASH_URL}/pipeline`, {
+      method: 'POST',
+      headers: {
+        Authorization:  `Bearer ${UPSTASH_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify([
+        ['SET', key, str, 'EX', ttlSec],
+      ]),
+    });
+    const ok = res.ok;
+    console.log(`Sauvegarde Redis [${key}] : ${ok ? 'OK' : 'échec'}`);
+    return ok;
+  } catch (e) {
+    console.error(`Redis pipeline error [${key}]:`, e.message);
+    return false;
+  }
+}
+
 async function saveToRedis(coureurs) {
   const str = JSON.stringify(coureurs);
   // Upstash a une limite sur les URLs — on utilise l'API pipeline pour les gros payloads
@@ -554,7 +575,7 @@ app.get('/api/resultats', async (req, res) => {
 app.get('/api/resultats/refresh', async (req, res) => {
   try {
     const data = await loadResultats();
-    await redisSet('defi_enfance_resultats', JSON.stringify(data), 24 * 60 * 60); // 24h
+    await saveToRedis_key('defi_enfance_resultats', JSON.stringify(data), 24 * 60 * 60);
     res.json({ success: true, coureurs: data.coureurs.length, equipes: data.equipes.length });
   } catch (err) {
     res.status(500).json({ error: err.message });
