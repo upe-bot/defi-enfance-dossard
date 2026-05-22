@@ -142,7 +142,9 @@ async function loadFromOhme() {
 // ── Cache mémoire + Redis
 let _memCache     = null;
 let _memCacheTime = 0;
-const MEM_TTL = 5 * 60 * 1000;
+const MEM_TTL  = 5 * 60 * 1000;
+let _loading   = false; // verrou anti-chargements parallèles
+let _loadingP  = null;  // promesse partagée
 
 async function getData() {
   // 1. Cache mémoire
@@ -162,12 +164,25 @@ async function getData() {
     } catch (e) { console.log('Redis parse error:', e.message); }
   }
 
-  // 3. Ohme
-  const coureurs = await loadFromOhme();
-  await saveToRedis(coureurs);
-  _memCache     = coureurs;
-  _memCacheTime = Date.now();
-  return coureurs;
+  // 3. Ohme — avec verrou pour éviter les chargements parallèles
+  if (_loading) {
+    console.log('Chargement déjà en cours, attente...');
+    return _loadingP;
+  }
+  _loading  = true;
+  _loadingP = (async () => {
+    try {
+      const coureurs = await loadFromOhme();
+      await saveToRedis(coureurs);
+      _memCache     = coureurs;
+      _memCacheTime = Date.now();
+      return coureurs;
+    } finally {
+      _loading  = false;
+      _loadingP = null;
+    }
+  })();
+  return _loadingP;
 }
 
 async function saveToRedis(coureurs) {
@@ -243,17 +258,32 @@ app.get('/api/equipes', async (req, res) => {
 });
 
 app.get('/api/refresh', async (req, res) => {
+  if (_loading) {
+    return res.json({ message: 'Chargement déjà en cours, patientez...', loading: true });
+  }
   try {
     console.log('Rechargement forcé depuis Ohme...');
     _memCache     = null;
     _memCacheTime = 0;
     await redisDel(REDIS_KEY);
-    const coureurs = await loadFromOhme();
-    await saveToRedis(coureurs);
-    _memCache     = coureurs;
-    _memCacheTime = Date.now();
+    _loading  = true;
+    _loadingP = (async () => {
+      try {
+        const coureurs = await loadFromOhme();
+        await saveToRedis(coureurs);
+        _memCache     = coureurs;
+        _memCacheTime = Date.now();
+        return coureurs;
+      } finally {
+        _loading  = false;
+        _loadingP = null;
+      }
+    })();
+    const coureurs = await _loadingP;
     res.json({ success: true, count: coureurs.length });
   } catch (err) {
+    _loading  = false;
+    _loadingP = null;
     res.status(500).json({ error: err.message });
   }
 });
