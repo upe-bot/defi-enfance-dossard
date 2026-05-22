@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mon dossard — Défi Enfance #Angers 2026</title>
+  <title>Défi Enfance #Angers 2026</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 
@@ -425,7 +425,161 @@
       color: var(--gray-300);
     }
 
-    @media (max-width: 480px) {
+
+    /* ── Navigation pages ── */
+    .page-nav {
+      display: flex;
+      gap: 0;
+      margin-bottom: 2rem;
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 4px;
+      box-shadow: var(--shadow);
+    }
+    .page-btn {
+      flex: 1;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--gray-500);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .page-btn.active {
+      background: var(--magenta);
+      color: var(--white);
+      box-shadow: 0 2px 8px rgba(251,0,137,0.3);
+    }
+
+    /* ── Résultats ── */
+    .resultats-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 1.5rem;
+      background: var(--gray-100);
+      border-radius: 10px;
+      padding: 4px;
+    }
+    .res-tab {
+      flex: 1;
+      padding: 0.6rem;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--gray-500);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .res-tab.active {
+      background: var(--white);
+      color: var(--orange-vif);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+      font-weight: 600;
+    }
+
+    .podium {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 12px;
+      margin-bottom: 2rem;
+      padding: 1.5rem 1rem;
+      background: linear-gradient(135deg, #fff4ee, #fde6f3);
+      border-radius: var(--radius);
+    }
+    .podium-place {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .podium-medal { font-size: 2rem; }
+    .podium-name {
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-align: center;
+      max-width: 80px;
+      color: var(--text);
+    }
+    .podium-km {
+      font-family: 'Antonio', sans-serif;
+      font-size: 1.1rem;
+      color: var(--orange-vif);
+    }
+    .podium-block {
+      background: var(--white);
+      border-radius: 8px 8px 0 0;
+      width: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Antonio', sans-serif;
+      font-size: 1.5rem;
+      color: var(--gray-500);
+      box-shadow: var(--shadow);
+    }
+    .podium-block.p1 { height: 80px; background: linear-gradient(135deg, #FFD700, #FFA500); color: white; }
+    .podium-block.p2 { height: 60px; background: linear-gradient(135deg, #C0C0C0, #A0A0A0); color: white; }
+    .podium-block.p3 { height: 45px; background: linear-gradient(135deg, #CD7F32, #A0522D); color: white; }
+
+    .rank-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 2px solid var(--gray-100);
+      padding: 0.9rem 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.6rem;
+      transition: border-color 0.2s;
+    }
+    .rank-card:hover { border-color: var(--orange-light); }
+    .rank-num {
+      font-family: 'Antonio', sans-serif;
+      font-size: 1.4rem;
+      color: var(--gray-300);
+      min-width: 36px;
+      text-align: center;
+    }
+    .rank-num.top1 { color: #FFD700; }
+    .rank-num.top2 { color: #C0C0C0; }
+    .rank-num.top3 { color: #CD7F32; }
+    .rank-info { flex: 1; min-width: 0; }
+    .rank-name { font-weight: 600; font-size: 0.92rem; color: var(--text); }
+    .rank-name .prenom { color: var(--magenta); }
+    .rank-meta { font-size: 0.76rem; color: var(--gray-500); margin-top: 2px; }
+    .rank-km {
+      font-family: 'Antonio', sans-serif;
+      font-size: 1.3rem;
+      color: var(--orange-vif);
+      white-space: nowrap;
+    }
+    .rank-km span { font-size: 0.7rem; font-family: 'Poppins', sans-serif; color: var(--gray-500); }
+
+    .medal-defi {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, var(--magenta), var(--orange-vif));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .no-resultats {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--gray-500);
+    }
+    .no-resultats .icon { font-size: 3rem; margin-bottom: 1rem; }
+
+    @media (max-width: 480px) {    @media (max-width: 480px) {
       .header-logo .defi { font-size: 1.2rem; }
       .header-logo .enfance { font-size: 1.5rem; }
       .hands-icon { width: 44px; height: 44px; }
@@ -460,9 +614,9 @@
 </header>
 
 <main>
-  <div class="hero">
-    <h1>Retrouve ton <span>dossard</span> !</h1>
-    <p>Recherche par nom, prénom ou équipe pour Défi Enfance Angers 2026</p>
+  <div class="page-nav" role="tablist" aria-label="Navigation">
+    <button class="page-btn active" id="btn-page-dossard" onclick="showPage('dossard')">🎽 Mon dossard</button>
+    <button class="page-btn" id="btn-page-resultats" onclick="showPage('resultats')">🏆 Résultats</button>
   </div>
 
   <div class="search-card">
@@ -529,12 +683,37 @@
   </section>
 </main>
 
+
+<section id="page-resultats" style="display:none;" aria-label="Résultats de la course">
+  <div class="hero" style="margin-bottom:1.5rem;">
+    <h1>🏆 <span>Résultats</span></h1>
+    <p>Classements coureurs et équipes — Défi Enfance Angers 2026</p>
+  </div>
+
+  <div class="search-card">
+    <div class="resultats-tabs">
+      <button class="res-tab active" id="tab-coureurs" onclick="showResTab('coureurs')">🏃 Coureurs</button>
+      <button class="res-tab" id="tab-equipes" onclick="showResTab('equipes')">🏆 Équipes</button>
+    </div>
+
+    <div id="res-coureurs">
+      <div id="podium-coureurs"></div>
+      <div id="liste-coureurs"><div class="no-resultats"><div class="icon">⏳</div><p>Chargement des résultats...</p></div></div>
+    </div>
+
+    <div id="res-equipes" style="display:none;">
+      <div id="podium-equipes"></div>
+      <div id="liste-equipes"><div class="no-resultats"><div class="icon">⏳</div><p>Chargement des résultats...</p></div></div>
+    </div>
+  </div>
+</section>
+
 <footer>
   Défi Enfance · Angers 2026 · Générateur de victoires pour l'enfance
 </footer>
 
 <script>
-  const API_BASE = 'https://defi-enfance-dossard-api.onrender.com';
+  const API_BASE = 'https://REMPLACER_PAR_TON_URL_RENDER.onrender.com';
 
   const tabs         = document.querySelectorAll('.tab');
   const sectionNom   = document.getElementById('search-nom');
@@ -707,6 +886,137 @@
   btnEq.addEventListener('click', doSearch);
   inputNom.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
   selectEq.addEventListener('change', () => { if (selectEq.value) clearResults(); });
+
+  // ── Navigation pages ──────────────────────────────────────────────────────
+  let resultatsLoaded = false;
+  let currentResTab = 'coureurs';
+  let resultatsData = { coureurs: [], equipes: [] };
+
+  function showPage(page) {
+    const pageDossard   = document.getElementById('page-dossard') || document.querySelector('section[aria-label="Résultats de recherche"]')?.parentElement;
+    const pageResultats = document.getElementById('page-resultats');
+    const btnDossard    = document.getElementById('btn-page-dossard');
+    const btnResultats  = document.getElementById('btn-page-resultats');
+    const searchCard    = document.querySelector('.search-card');
+    const hero          = document.querySelector('.hero');
+
+    if (page === 'resultats') {
+      if (searchCard) searchCard.style.display = 'none';
+      if (hero) hero.style.display = 'none';
+      document.getElementById('results-section').style.display = 'none';
+      pageResultats.style.display = 'block';
+      btnDossard.classList.remove('active');
+      btnResultats.classList.add('active');
+      if (!resultatsLoaded) loadResultats();
+    } else {
+      if (searchCard) searchCard.style.display = 'block';
+      if (hero) hero.style.display = 'block';
+      pageResultats.style.display = 'none';
+      btnDossard.classList.add('active');
+      btnResultats.classList.remove('active');
+    }
+  }
+
+  function showResTab(tab) {
+    currentResTab = tab;
+    document.getElementById('res-coureurs').style.display = tab === 'coureurs' ? 'block' : 'none';
+    document.getElementById('res-equipes').style.display  = tab === 'equipes'  ? 'block' : 'none';
+    document.getElementById('tab-coureurs').classList.toggle('active', tab === 'coureurs');
+    document.getElementById('tab-equipes').classList.toggle('active', tab === 'equipes');
+  }
+
+  function medailleRank(rank) {
+    if (rank === 1) return '🥇';
+    if (rank === 2) return '🥈';
+    if (rank === 3) return '🥉';
+    return '🏅';
+  }
+
+  function topClass(rank) {
+    if (rank === 1) return 'top1';
+    if (rank === 2) return 'top2';
+    if (rank === 3) return 'top3';
+    return '';
+  }
+
+  function renderPodium(top3, type) {
+    if (!top3 || top3.length === 0) return '';
+    const order = [1, 0, 2]; // argent, or, bronze
+    const heights = ['p2', 'p1', 'p3'];
+    let html = '<div class="podium">';
+    order.forEach((idx, pos) => {
+      const item = top3[idx];
+      if (!item) return;
+      const nom = type === 'coureur'
+        ? `${escHtml(item.prenom)}<br>${escHtml(item.nom)}`
+        : escHtml(item.equipe);
+      html += `<div class="podium-place">
+        <div class="podium-medal">${medailleRank(idx + 1)}</div>
+        <div class="podium-name">${nom}</div>
+        <div class="podium-km">${item.km} <small>km</small></div>
+        <div class="podium-block ${heights[pos]}">${idx + 1}</div>
+      </div>`;
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function renderListeCoureurs(coureurs) {
+    if (!coureurs || coureurs.length === 0) {
+      return '<div class="no-resultats"><div class="icon">🏃</div><h3>Pas encore de résultats</h3><p>Les résultats seront disponibles après la course.</p></div>';
+    }
+    return coureurs.slice(3).map(c => `
+      <div class="rank-card">
+        <div class="rank-num ${topClass(c.classement)}">${c.classement || '—'}</div>
+        <div class="medal-defi">🏅</div>
+        <div class="rank-info">
+          <div class="rank-name"><span class="prenom">${escHtml(c.prenom)}</span> ${escHtml(c.nom)}</div>
+          ${c.dossard ? `<div class="rank-meta">Dossard ${pad(c.dossard)}</div>` : ''}
+        </div>
+        <div class="rank-km">${c.km} <span>km</span></div>
+      </div>`).join('');
+  }
+
+  function renderListeEquipes(equipes) {
+    if (!equipes || equipes.length === 0) {
+      return '<div class="no-resultats"><div class="icon">🏆</div><h3>Pas encore de résultats</h3><p>Les résultats seront disponibles après la course.</p></div>';
+    }
+    return equipes.slice(3).map(e => `
+      <div class="rank-card">
+        <div class="rank-num ${topClass(e.classement)}">${e.classement || '—'}</div>
+        <div class="medal-defi">🏅</div>
+        <div class="rank-info">
+          <div class="rank-name">${escHtml(e.equipe)}</div>
+        </div>
+        <div class="rank-km">${e.km} <span>km</span></div>
+      </div>`).join('');
+  }
+
+  async function loadResultats() {
+    try {
+      const res  = await fetch(`${API_BASE}/api/resultats`);
+      const data = await res.json();
+      resultatsData   = data;
+      resultatsLoaded = true;
+
+      // Coureurs
+      const top3C = (data.coureurs || []).slice(0, 3);
+      document.getElementById('podium-coureurs').innerHTML  = renderPodium(top3C, 'coureur');
+      document.getElementById('liste-coureurs').innerHTML   = renderListeCoureurs(data.coureurs || []);
+
+      // Équipes
+      const top3E = (data.equipes || []).slice(0, 3);
+      document.getElementById('podium-equipes').innerHTML   = renderPodium(top3E, 'equipe');
+      document.getElementById('liste-equipes').innerHTML    = renderListeEquipes(data.equipes || []);
+
+    } catch (err) {
+      document.getElementById('liste-coureurs').innerHTML =
+        '<div class="no-resultats"><div class="icon">⚠️</div><p>Impossible de charger les résultats.</p></div>';
+    }
+  }
+
+  // Ajouter id à la section dossard pour la navigation
+  document.querySelector('main').id = 'page-dossard';
 </script>
 </body>
 </html>
