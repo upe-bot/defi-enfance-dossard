@@ -184,14 +184,10 @@ app.get('/api/equipes', async (req, res) => {
 // Debug temporaire — à supprimer après vérification
 app.get('/api/debug', async (req, res) => {
   try {
-    const payments = await fetchAllPayments();
-    const sample = payments.slice(0, 3).map(p => ({
-      id:          p.id,
-      contact_id:  p.contact_id,
-      nom_event:   p.nom_de_levent,
-      custom_fields: p.custom_fields,
-    }));
-    res.json({ count: payments.length, sample });
+    const url = `${OHME_BASE}/api/v1/payments?payment_type_id=3&limit=1&since_date=2026-01-01`;
+    const r = await fetch(url, { headers: HEADERS });
+    const json = await r.json();
+    res.json(json);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
