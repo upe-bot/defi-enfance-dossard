@@ -25,7 +25,7 @@ const HEADERS = {
 };
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const DELAY = 800;
+const DELAY = 2000;
 const REDIS_KEY     = 'defi_enfance_dossards_v2';
 const REDIS_TTL_SEC = 6 * 60 * 60;
 
@@ -96,7 +96,7 @@ async function fetchContactById(contactId, retries = 3) {
       const res = await fetch(`${OHME_BASE}/api/v1/contacts/${contactId}`, { headers: HEADERS });
       if (res.status === 429) {
         console.log(`Rate limit contact ${contactId} — attente 10s (tentative ${attempt}/${retries})`);
-        await sleep(10000);
+        await sleep(30000);
         continue;
       }
       if (!res.ok) {
