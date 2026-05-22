@@ -25,7 +25,7 @@ const HEADERS = {
 };
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const DELAY = 300;
+const DELAY = 500;
 const REDIS_KEY     = 'defi_enfance_dossards_v2';
 const REDIS_TTL_SEC = 6 * 60 * 60;
 
@@ -88,12 +88,28 @@ async function fetchAllPayments() {
   return all;
 }
 
-async function fetchContactById(contactId) {
-  await sleep(DELAY);
-  const res = await fetch(`${OHME_BASE}/api/v1/contacts/${contactId}`, { headers: HEADERS });
-  if (!res.ok) return null;
-  const json = await res.json();
-  return json.data || json;
+async function fetchContactById(contactId, retries = 3) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    await sleep(DELAY * attempt); // délai croissant : 500ms, 1000ms, 1500ms
+    try {
+      const res = await fetch(`${OHME_BASE}/api/v1/contacts/${contactId}`, { headers: HEADERS });
+      if (res.status === 429) {
+        console.log(`Rate limit contact ${contactId} — attente 10s (tentative ${attempt}/${retries})`);
+        await sleep(10000);
+        continue;
+      }
+      if (!res.ok) {
+        console.log(`Contact ${contactId} erreur ${res.status} — tentative ${attempt}/${retries}`);
+        continue;
+      }
+      const json = await res.json();
+      return json.data || json;
+    } catch (e) {
+      console.log(`Contact ${contactId} exception : ${e.message}`);
+    }
+  }
+  console.log(`Contact ${contactId} abandonné après ${retries} tentatives.`);
+  return null;
 }
 
 async function loadFromOhme() {
