@@ -74,9 +74,10 @@ async function fetchAllPayments() {
   let cursor = null;
   while (true) {
     await sleep(DELAY);
+    // Pas de filtre payment_type_id — on prend tous les paiements et on filtre côté serveur
     const url = cursor
-      ? `${OHME_BASE}/api/v1/payments?payment_type_id=3&limit=250&since_date=2026-01-01&cursor=${encodeURIComponent(cursor)}`
-      : `${OHME_BASE}/api/v1/payments?payment_type_id=3&limit=250&since_date=2026-01-01`;
+      ? `${OHME_BASE}/api/v1/payments?limit=250&since_date=2025-01-01&cursor=${encodeURIComponent(cursor)}`
+      : `${OHME_BASE}/api/v1/payments?limit=250&since_date=2025-01-01`;
     const res = await fetch(url, { headers: HEADERS });
     if (!res.ok) throw new Error(`Payments Ohme ${res.status}`);
     const json = await res.json();
@@ -124,6 +125,10 @@ async function loadFromOhme() {
     if (!eventName.includes('ANGERS')) continue;
     const qualite = (p.qualite_du_participant || '').toLowerCase();
     if (qualite === 'don attendu' || qualite === 'exclu') continue;
+    // Garder uniquement les paiements avec une équipe OU une asso soutenue (= coureurs inscrits)
+    const equipe = (p.equipe || '').trim();
+    const asso   = (p.asso_soutenue || '').trim();
+    if (!equipe && !asso) continue;
     const id = String(p.contact_id);
     if (!contactIds.has(id)) contactIds.set(id, p);
   }
@@ -274,6 +279,56 @@ app.get('/api/equipes', async (req, res) => {
 });
 
 // Complète Redis avec les coureurs manquants (sans tout recharger)
+// Debug — stats par type de paiement pour les événements Angers
+app.get('/api/debug-types', async (req, res) => {
+  try {
+    const all = [];
+    let cursor = null;
+    while (true) {
+      await sleep(500);
+      const url = cursor
+        ? `${OHME_BASE}/api/v1/payments?limit=250&since_date=2025-01-01&cursor=${encodeURIComponent(cursor)}`
+        : `${OHME_BASE}/api/v1/payments?limit=250&since_date=2025-01-01`;
+      const r = await fetch(url, { headers: HEADERS });
+      if (!r.ok) break;
+      const json = await r.json();
+      const items = json.data || [];
+      all.push(...items);
+      cursor = json.cursor || null;
+      if (!cursor || items.length < 250) break;
+    }
+
+    // Filtrer sur Angers
+    const angers = all.filter(p => (p.nom_de_levent || '').toUpperCase().includes('ANGERS'));
+
+    // Stats par type
+    const parType = {};
+    for (const p of angers) {
+      const t = p.payment_type_id;
+      parType[t] = (parType[t] || 0) + 1;
+    }
+
+    // Contact IDs uniques par type
+    const idsParType = {};
+    for (const p of angers) {
+      const t = p.payment_type_id;
+      if (!idsParType[t]) idsParType[t] = new Set();
+      if (p.contact_id) idsParType[t].add(String(p.contact_id));
+    }
+    const resumeIds = {};
+    for (const [t, s] of Object.entries(idsParType)) resumeIds[t] = s.size;
+
+    res.json({
+      total_paiements_angers: angers.length,
+      paiements_par_type: parType,
+      contacts_uniques_par_type: resumeIds,
+      exemples_noms_event: [...new Set(angers.map(p => p.nom_de_levent))].slice(0, 10),
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/complete', async (req, res) => {
   if (_loading) {
     return res.json({ message: 'Chargement déjà en cours, patientez...', loading: true });
