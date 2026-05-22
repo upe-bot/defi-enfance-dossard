@@ -273,6 +273,75 @@ app.get('/api/equipes', async (req, res) => {
   }
 });
 
+// Complète Redis avec les coureurs manquants (sans tout recharger)
+app.get('/api/complete', async (req, res) => {
+  if (_loading) {
+    return res.json({ message: 'Chargement déjà en cours, patientez...', loading: true });
+  }
+  try {
+    // Charger ce qui est déjà dans Redis
+    const raw = await redisGet(REDIS_KEY);
+    const dejaDans = raw ? JSON.parse(raw) : [];
+    const dejaIds  = new Set(dejaDans.map(c => c.id));
+    console.log(`${dejaDans.length} coureurs déjà dans Redis.`);
+
+    // Charger les paiements pour trouver les IDs manquants
+    const rawPayments = await fetchAllPayments();
+    const contactIds  = new Map();
+    for (const p of rawPayments) {
+      if (!p.contact_id) continue;
+      const eventName = (p.nom_de_levent || '').toUpperCase();
+      if (!eventName.includes('ANGERS')) continue;
+      const qualite = (p.qualite_du_participant || '').toLowerCase();
+      if (qualite === 'don attendu' || qualite === 'exclu') continue;
+      const id = String(p.contact_id);
+      if (!dejaIds.has(id) && !contactIds.has(id)) contactIds.set(id, p);
+    }
+
+    console.log(`${contactIds.size} coureurs manquants à charger...`);
+    if (contactIds.size === 0) {
+      return res.json({ success: true, added: 0, total: dejaDans.length, message: 'Rien à compléter' });
+    }
+
+    _loading  = true;
+    _loadingP = (async () => {
+      try {
+        const nouveaux = [];
+        let i = 0;
+        for (const [contactId, paiement] of contactIds) {
+          i++;
+          const contact = await fetchContactById(contactId);
+          if (!contact) continue;
+          const dossard = contact.numero_dossard_angers_2026 ?? null;
+          if (!dossard || dossard === 0) continue;
+          nouveaux.push({
+            id:      contactId,
+            prenom:  contact.firstname || '',
+            nom:     contact.lastname  || '',
+            dossard: dossard,
+            equipe:  (() => { const e = (paiement.equipe || '').trim(); return (!e || e.toLowerCase() === 'je cours solo') ? null : e; })(),
+          });
+        }
+        const tous = [...dejaDans, ...nouveaux];
+        await saveToRedis(tous);
+        _memCache     = tous;
+        _memCacheTime = Date.now();
+        console.log(`Complété : +${nouveaux.length} coureurs. Total : ${tous.length}`);
+        return { added: nouveaux.length, total: tous.length };
+      } finally {
+        _loading  = false;
+        _loadingP = null;
+      }
+    })();
+    const result = await _loadingP;
+    res.json({ success: true, ...result });
+  } catch (err) {
+    _loading  = false;
+    _loadingP = null;
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/refresh', async (req, res) => {
   if (_loading) {
     return res.json({ message: 'Chargement déjà en cours, patientez...', loading: true });
