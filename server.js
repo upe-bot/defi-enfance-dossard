@@ -25,7 +25,6 @@ const HEADERS = {
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const DELAY = 300;
 
-// ── Charge tous les paiements billetterie type 3 (contient les champs perso)
 async function fetchAllPayments() {
   const all = [];
   let cursor = null;
@@ -45,7 +44,6 @@ async function fetchAllPayments() {
   return all;
 }
 
-// ── Charge tous les contacts (pour nom/prénom)
 async function fetchAllContacts() {
   const all = [];
   let cursor = null;
@@ -65,7 +63,6 @@ async function fetchAllContacts() {
   return all;
 }
 
-// ── Cache en mémoire 5 min
 let _cache     = null;
 let _cacheTime = 0;
 const CACHE_TTL = 5 * 60 * 1000;
@@ -80,41 +77,31 @@ async function getData() {
   ]);
   console.log(`${rawContacts.length} contacts, ${rawPayments.length} paiements récupérés.`);
 
-  // Map contact_id → {prenom, nom, email}
   const contactMap = new Map();
   for (const c of rawContacts) {
     contactMap.set(String(c.id), {
       prenom: c.firstname || '',
       nom:    c.lastname  || '',
-      email:  c.email     || '',
     });
   }
 
-  // Construire la liste des coureurs depuis les paiements billetterie
-  // Un paiement billetterie = une inscription coureur avec ses champs perso
-  const seen = new Set();
+  const seen    = new Set();
   const coureurs = [];
 
   for (const p of rawPayments) {
     if (!p.contact_id) continue;
     const contactId = String(p.contact_id);
-
-    // Eviter les doublons (un coureur peut avoir plusieurs paiements)
     if (seen.has(contactId)) continue;
 
-    const cf = p.custom_fields || p;
-    const dossard = cf.numero_dossard_angers_2026 ?? null;
-
-    // On ne garde que les contacts avec un dossard
+    // Les champs perso sont directement à la racine du paiement
+    const dossard = p.numero_dossard_angers_2026 ?? null;
     if (dossard === null || dossard === undefined || dossard === '' || dossard === 0) continue;
 
-    const contact = contactMap.get(contactId) || { prenom: '', nom: '', email: '' };
-    const equipe  = (cf.equipe || '').trim() || null;
-    const eventName = (p.nom_de_levent || cf.nom_de_levent || '').toUpperCase();
+    const equipe    = (p.equipe || '').trim() || null;
+    const eventName = (p.nom_de_levent || '').toUpperCase();
+    if (!eventName.includes('ANGERS')) continue;
 
-    // Filtrer sur l'événement Angers 2026
-    if (!eventName.includes('ENFANCE') && !eventName.includes('ANGERS')) continue;
-
+    const contact = contactMap.get(contactId) || { prenom: '', nom: '' };
     seen.add(contactId);
     coureurs.push({
       id:      contactId,
@@ -131,7 +118,6 @@ async function getData() {
   return _cache;
 }
 
-// ── Routes
 app.get('/health', (_, res) =>
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 );
@@ -181,13 +167,19 @@ app.get('/api/equipes', async (req, res) => {
   }
 });
 
-// Debug temporaire — à supprimer après vérification
+// Debug — à supprimer après vérification
 app.get('/api/debug', async (req, res) => {
   try {
-    const url = `${OHME_BASE}/api/v1/payments?payment_type_id=3&limit=1&since_date=2026-01-01`;
+    const url = `${OHME_BASE}/api/v1/payments?payment_type_id=3&limit=5&since_date=2026-01-01`;
     const r = await fetch(url, { headers: HEADERS });
     const json = await r.json();
-    res.json(json);
+    const sample = (json.data || []).map(p => ({
+      contact_id: p.contact_id,
+      nom_event:  p.nom_de_levent,
+      dossard:    p.numero_dossard_angers_2026,
+      equipe:     p.equipe,
+    }));
+    res.json({ count: json.count, sample });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
