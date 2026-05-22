@@ -26,11 +26,10 @@ const HEADERS = {
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const DELAY = 300;
+const REDIS_KEY     = 'defi_enfance_dossards_v2';
+const REDIS_TTL_SEC = 6 * 60 * 60;
 
-const REDIS_KEY     = 'defi_enfance_dossards';
-const REDIS_TTL_SEC = 6 * 60 * 60; // 6 heures
-
-// ── Redis Upstash
+// ── Redis Upstash REST API
 async function redisGet(key) {
   if (!UPSTASH_URL || !UPSTASH_TOKEN) return null;
   try {
@@ -39,20 +38,34 @@ async function redisGet(key) {
     });
     if (!res.ok) return null;
     const json = await res.json();
-    return json.result ?? null;
-  } catch { return null; }
+    if (json.result === null || json.result === undefined) return null;
+    return json.result;
+  } catch (e) { console.error('Redis GET error:', e.message); return null; }
 }
 
 async function redisSet(key, value, ttlSec) {
   if (!UPSTASH_URL || !UPSTASH_TOKEN) return false;
   try {
-    const res = await fetch(`${UPSTASH_URL}/set/${encodeURIComponent(key)}`, {
-      method:  'POST',
-      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}`, 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ value, ex: ttlSec }),
-    });
+    // Upstash REST: POST /set/key/value?ex=ttl
+    const res = await fetch(
+      `${UPSTASH_URL}/set/${encodeURIComponent(key)}/${encodeURIComponent(value)}?ex=${ttlSec}`,
+      {
+        method:  'GET',
+        headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+      }
+    );
     return res.ok;
-  } catch { return false; }
+  } catch (e) { console.error('Redis SET error:', e.message); return false; }
+}
+
+async function redisDel(key) {
+  if (!UPSTASH_URL || !UPSTASH_TOKEN) return;
+  try {
+    await fetch(`${UPSTASH_URL}/del/${encodeURIComponent(key)}`, {
+      method:  'GET',
+      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+    });
+  } catch {}
 }
 
 // ── Ohme
@@ -83,13 +96,11 @@ async function fetchContactById(contactId) {
   return json.data || json;
 }
 
-// ── Chargement complet depuis Ohme (~3 min pour 630 coureurs)
 async function loadFromOhme() {
   console.log('Chargement des paiements Ohme...');
   const rawPayments = await fetchAllPayments();
   console.log(`${rawPayments.length} paiements récupérés.`);
 
-  // Dédoublonner les coureurs Angers
   const contactIds = new Map();
   for (const p of rawPayments) {
     if (!p.contact_id) continue;
@@ -120,7 +131,7 @@ async function loadFromOhme() {
       prenom:  contact.firstname || '',
       nom:     contact.lastname  || '',
       dossard: dossard,
-      equipe:  (paiement.equipe || '').trim() || null,
+      equipe:  (() => { const e = (paiement.equipe || '').trim(); return (!e || e.toLowerCase() === 'je cours solo') ? null : e; })(),
     });
   }
 
@@ -128,37 +139,58 @@ async function loadFromOhme() {
   return coureurs;
 }
 
-// ── getData : Redis d'abord, puis Ohme si absent
+// ── Cache mémoire + Redis
 let _memCache     = null;
 let _memCacheTime = 0;
-const MEM_TTL = 5 * 60 * 1000; // 5 min en mémoire
+const MEM_TTL = 5 * 60 * 1000;
 
 async function getData() {
-  // 1. Cache mémoire (5 min) — évite les appels Redis répétés
+  // 1. Cache mémoire
   if (_memCache && Date.now() - _memCacheTime < MEM_TTL) return _memCache;
 
-  // 2. Redis (6h) — survit aux redémarrages Render
+  // 2. Redis
   const raw = await redisGet(REDIS_KEY);
   if (raw) {
     try {
       const coureurs = JSON.parse(raw);
-      console.log(`${coureurs.length} coureurs chargés depuis Redis.`);
-      _memCache     = coureurs;
-      _memCacheTime = Date.now();
-      return coureurs;
-    } catch { console.log('Redis parse error — rechargement depuis Ohme'); }
+      if (Array.isArray(coureurs) && coureurs.length > 0) {
+        console.log(`${coureurs.length} coureurs chargés depuis Redis.`);
+        _memCache     = coureurs;
+        _memCacheTime = Date.now();
+        return coureurs;
+      }
+    } catch (e) { console.log('Redis parse error:', e.message); }
   }
 
-  // 3. Ohme — chargement complet (~3 min)
+  // 3. Ohme
   const coureurs = await loadFromOhme();
-
-  // Sauvegarder dans Redis pour les prochains démarrages
-  const ok = await redisSet(REDIS_KEY, JSON.stringify(coureurs), REDIS_TTL_SEC);
-  console.log(`Sauvegarde Redis : ${ok ? 'OK' : 'échec'}`);
-
+  await saveToRedis(coureurs);
   _memCache     = coureurs;
   _memCacheTime = Date.now();
   return coureurs;
+}
+
+async function saveToRedis(coureurs) {
+  const str = JSON.stringify(coureurs);
+  // Upstash a une limite sur les URLs — on utilise l'API pipeline pour les gros payloads
+  try {
+    const res = await fetch(`${UPSTASH_URL}/pipeline`, {
+      method: 'POST',
+      headers: {
+        Authorization:  `Bearer ${UPSTASH_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify([
+        ['SET', REDIS_KEY, str, 'EX', REDIS_TTL_SEC],
+      ]),
+    });
+    const ok = res.ok;
+    console.log(`Sauvegarde Redis pipeline : ${ok ? 'OK' : 'échec'}`);
+    return ok;
+  } catch (e) {
+    console.error('Redis pipeline error:', e.message);
+    return false;
+  }
 }
 
 // ── Routes
@@ -210,18 +242,17 @@ app.get('/api/equipes', async (req, res) => {
   }
 });
 
-// Force le rechargement depuis Ohme et met à jour Redis
 app.get('/api/refresh', async (req, res) => {
   try {
     console.log('Rechargement forcé depuis Ohme...');
     _memCache     = null;
     _memCacheTime = 0;
-    await redisSet(REDIS_KEY, '', 1); // expire Redis immédiatement
+    await redisDel(REDIS_KEY);
     const coureurs = await loadFromOhme();
-    const ok = await redisSet(REDIS_KEY, JSON.stringify(coureurs), REDIS_TTL_SEC);
+    await saveToRedis(coureurs);
     _memCache     = coureurs;
     _memCacheTime = Date.now();
-    res.json({ success: true, count: coureurs.length, redis: ok });
+    res.json({ success: true, count: coureurs.length });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
