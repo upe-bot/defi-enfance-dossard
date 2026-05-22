@@ -25,7 +25,7 @@ const HEADERS = {
 };
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const DELAY = 500;
+const DELAY = 800;
 const REDIS_KEY     = 'defi_enfance_dossards_v2';
 const REDIS_TTL_SEC = 6 * 60 * 60;
 
@@ -114,6 +114,17 @@ async function fetchContactById(contactId, retries = 3) {
 }
 
 async function loadFromOhme() {
+  // Verrou Redis anti-instances-parallèles
+  const lockKey = 'defi_enfance_dossards_lock';
+  const lockVal = `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const existing = await redisGet(lockKey);
+  if (existing) {
+    console.log('Chargement déjà en cours sur une autre instance — abandon.');
+    return null; // retourne null pour signaler qu'on n'a pas chargé
+  }
+  // Poser le verrou (expire dans 10 min)
+  await redisSet(lockKey, lockVal, 600);
+
   console.log('Chargement des paiements Ohme...');
   const rawPayments = await fetchAllPayments();
   console.log(`${rawPayments.length} paiements récupérés.`);
@@ -157,6 +168,8 @@ async function loadFromOhme() {
   }
 
   console.log(`${coureurs.length} coureurs avec dossard chargés depuis Ohme.`);
+  // Libérer le verrou Redis
+  await redisDel('defi_enfance_dossards_lock');
   return coureurs;
 }
 
@@ -185,15 +198,26 @@ async function getData() {
     } catch (e) { console.log('Redis parse error:', e.message); }
   }
 
-  // 3. Ohme — avec verrou pour éviter les chargements parallèles
+  // 3. Ohme — avec verrou mémoire + Redis pour éviter les chargements parallèles
   if (_loading) {
-    console.log('Chargement déjà en cours, attente...');
+    console.log('Chargement déjà en cours (mémoire), attente...');
     return _loadingP;
   }
   _loading  = true;
   _loadingP = (async () => {
     try {
       const coureurs = await loadFromOhme();
+      if (coureurs === null) {
+        // Une autre instance charge déjà — on attend et on relit Redis dans 30s
+        console.log('Autre instance en cours — attente 30s puis relecture Redis...');
+        await sleep(30000);
+        const raw2 = await redisGet(REDIS_KEY);
+        if (raw2) {
+          const c2 = JSON.parse(raw2);
+          if (Array.isArray(c2) && c2.length > 0) return c2;
+        }
+        return _memCache || [];
+      }
       await saveToRedis(coureurs);
       _memCache     = coureurs;
       _memCacheTime = Date.now();
