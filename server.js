@@ -470,6 +470,97 @@ app.get('/api/seed', async (req, res) => {
   }
 });
 
+
+// ── Routes résultats ─────────────────────────────────────────────────────────
+
+// Charge les résultats depuis Ohme (contacts + structures)
+async function loadResultats() {
+  console.log('Chargement résultats depuis Ohme...');
+
+  // 1. Contacts : km_parcourus_angers2026 + classement_angers2026
+  const contacts = [];
+  let cursor = null;
+  while (true) {
+    await sleep(DELAY);
+    const url = cursor
+      ? `${OHME_BASE}/api/v1/contacts?limit=500&cursor=${encodeURIComponent(cursor)}`
+      : `${OHME_BASE}/api/v1/contacts?limit=500`;
+    const res = await fetch(url, { headers: HEADERS });
+    if (!res.ok) break;
+    const json = await res.json();
+    const items = json.data || [];
+    contacts.push(...items);
+    cursor = json.cursor || null;
+    if (!cursor || items.length < 500) break;
+  }
+
+  // 2. Structures : km_parcourus_equipe_angers_2026 + classement_angers20261
+  const structures = [];
+  let cursorS = null;
+  while (true) {
+    await sleep(DELAY);
+    const url = cursorS
+      ? `${OHME_BASE}/api/v1/structures?limit=500&cursor=${encodeURIComponent(cursorS)}`
+      : `${OHME_BASE}/api/v1/structures?limit=500`;
+    const res = await fetch(url, { headers: HEADERS });
+    if (!res.ok) break;
+    const json = await res.json();
+    const items = json.data || [];
+    structures.push(...items);
+    cursorS = json.cursor || null;
+    if (!cursorS || items.length < 500) break;
+  }
+
+  // Construire classement coureurs
+  const classementCoureurs = contacts
+    .map(c => ({
+      prenom:     c.firstname || '',
+      nom:        c.lastname  || '',
+      km:         parseFloat(c.km_parcourus_angers2026 || 0),
+      classement: parseInt(c.classement_angers2026 || 0),
+      dossard:    parseInt(c.numero_dossard_angers_2026 || 0),
+    }))
+    .filter(c => c.km > 0 || c.classement > 0)
+    .sort((a, b) => (a.classement || 9999) - (b.classement || 9999));
+
+  // Construire classement équipes
+  const classementEquipes = structures
+    .map(s => ({
+      equipe:     s.name || '',
+      km:         parseFloat(s.km_parcourus_equipe_angers_2026 || 0),
+      classement: parseInt(s.classement_angers20261 || 0),
+    }))
+    .filter(e => e.km > 0 || e.classement > 0)
+    .sort((a, b) => (a.classement || 9999) - (b.classement || 9999));
+
+  console.log(`${classementCoureurs.length} coureurs classés, ${classementEquipes.length} équipes classées.`);
+  return { coureurs: classementCoureurs, equipes: classementEquipes };
+}
+
+// GET /api/resultats — lit depuis Redis
+app.get('/api/resultats', async (req, res) => {
+  try {
+    const raw = await redisGet('defi_enfance_resultats');
+    if (raw) {
+      return res.json(JSON.parse(raw));
+    }
+    res.json({ coureurs: [], equipes: [], message: 'Pas encore de résultats — utilisez /api/resultats/refresh' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/resultats/refresh — charge depuis Ohme et sauvegarde dans Redis
+app.get('/api/resultats/refresh', async (req, res) => {
+  try {
+    const data = await loadResultats();
+    await redisSet('defi_enfance_resultats', JSON.stringify(data), 24 * 60 * 60); // 24h
+    res.json({ success: true, coureurs: data.coureurs.length, equipes: data.equipes.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, () =>
   console.log(`Défi Enfance API démarrée sur le port ${PORT}`)
 );
