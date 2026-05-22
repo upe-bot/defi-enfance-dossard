@@ -181,10 +181,10 @@ let _loading   = false; // verrou anti-chargements parallèles
 let _loadingP  = null;  // promesse partagée
 
 async function getData() {
-  // 1. Cache mémoire
+  // 1. Cache mémoire (5 min)
   if (_memCache && Date.now() - _memCacheTime < MEM_TTL) return _memCache;
 
-  // 2. Redis
+  // 2. Redis uniquement — jamais d'appel Ohme automatique
   const raw = await redisGet(REDIS_KEY);
   if (raw) {
     try {
@@ -198,36 +198,10 @@ async function getData() {
     } catch (e) { console.log('Redis parse error:', e.message); }
   }
 
-  // 3. Ohme — avec verrou mémoire + Redis pour éviter les chargements parallèles
-  if (_loading) {
-    console.log('Chargement déjà en cours (mémoire), attente...');
-    return _loadingP;
-  }
-  _loading  = true;
-  _loadingP = (async () => {
-    try {
-      const coureurs = await loadFromOhme();
-      if (coureurs === null) {
-        // Une autre instance charge déjà — on attend et on relit Redis dans 30s
-        console.log('Autre instance en cours — attente 30s puis relecture Redis...');
-        await sleep(30000);
-        const raw2 = await redisGet(REDIS_KEY);
-        if (raw2) {
-          const c2 = JSON.parse(raw2);
-          if (Array.isArray(c2) && c2.length > 0) return c2;
-        }
-        return _memCache || [];
-      }
-      await saveToRedis(coureurs);
-      _memCache     = coureurs;
-      _memCacheTime = Date.now();
-      return coureurs;
-    } finally {
-      _loading  = false;
-      _loadingP = null;
-    }
-  })();
-  return _loadingP;
+  // Redis vide — retourner tableau vide, ne jamais appeler Ohme automatiquement
+  // Utiliser /api/seed ou /api/refresh pour charger les données
+  console.log('Redis vide — utilisez /api/seed pour charger les données.');
+  return [];
 }
 
 async function saveToRedis(coureurs) {
