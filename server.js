@@ -22,26 +22,25 @@ const HEADERS = {
   'client-secret': OHME_CLIENT_SECRET,
 };
 
-// ── Charge tous les contacts (pagination cursor) ──────────────────────────────
 async function fetchAllContacts() {
   const all = [];
   let cursor = null;
   while (true) {
     const url = cursor
-      ? `${OHME_BASE}/api/v1/contacts?limit=500&cursor=${encodeURIComponent(cursor)}`
-      : `${OHME_BASE}/api/v1/contacts?limit=500`;
+      ? `${OHME_BASE}/api/v1/contacts?limit=500&include[]=custom_fields&cursor=${encodeURIComponent(cursor)}`
+      : `${OHME_BASE}/api/v1/contacts?limit=500&include[]=custom_fields`;
     const res = await fetch(url, { headers: HEADERS });
     if (!res.ok) throw new Error(`Contacts Ohme ${res.status}`);
     const json  = await res.json();
-    const items = json.data || json.contacts || json || [];
+    const root  = Array.isArray(json) ? json[0] : json;
+    const items = root.data || [];
     all.push(...items);
-    cursor = json.cursor || (items.length > 0 ? String(items[items.length - 1].id) : null);
+    cursor = root.cursor || null;
     if (!cursor || items.length < 500) break;
   }
   return all;
 }
 
-// ── Charge tous les paiements type 3 (inscription/don) ───────────────────────
 async function fetchAllPayments() {
   const all = [];
   let cursor = null;
@@ -52,9 +51,10 @@ async function fetchAllPayments() {
     const res = await fetch(url, { headers: HEADERS });
     if (!res.ok) throw new Error(`Payments Ohme ${res.status}`);
     const json  = await res.json();
-    const items = json.data || json || [];
+    const root  = Array.isArray(json) ? json[0] : json;
+    const items = root.data || json.data || (Array.isArray(json) ? [] : json) || [];
     all.push(...items);
-    cursor = json.cursor || (items.length > 0 ? String(items[items.length - 1].id) : null);
+    cursor = root.cursor || null;
     if (!cursor || items.length < 250) break;
   }
   return all;
@@ -64,14 +64,13 @@ function fmtContact(c) {
   const f = c.custom_fields || {};
   return {
     id:      String(c.id),
-    prenom:  c.first_name  || c.firstname || '',
-    nom:     c.last_name   || c.lastname  || '',
+    prenom:  c.firstname || '',
+    nom:     c.lastname  || '',
     dossard: f.numero_dossard_angers_2026 ?? null,
     equipe:  null,
   };
 }
 
-// ── Cache en mémoire 5 min ────────────────────────────────────────────────────
 let _cache     = null;
 let _cacheTime = 0;
 const CACHE_TTL = 5 * 60 * 1000;
@@ -85,7 +84,8 @@ async function getData() {
     fetchAllPayments(),
   ]);
 
-  // Map contact_id → equipe depuis les paiements
+  console.log(`${rawContacts.length} contacts, ${rawPayments.length} paiements récupérés.`);
+
   const equipeByContactId = new Map();
   for (const p of rawPayments) {
     if (!p.contact_id) continue;
@@ -94,7 +94,6 @@ async function getData() {
     if (equipe) equipeByContactId.set(String(p.contact_id), equipe);
   }
 
-  // Construire la liste finale
   const contacts = rawContacts
     .map(c => {
       const fmt = fmtContact(c);
@@ -109,10 +108,15 @@ async function getData() {
   return _cache;
 }
 
-// ── Routes ────────────────────────────────────────────────────────────────────
 app.get('/health', (_, res) =>
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 );
+
+// Route debug temporaire — à supprimer après vérification
+app.get('/api/debug', async (req, res) => {
+  const raw = await fetchAllContacts();
+  res.json(raw.slice(0, 2));
+});
 
 app.get('/api/search', async (req, res) => {
   try {
@@ -152,23 +156,11 @@ app.get('/api/equipes', async (req, res) => {
     const equipes  = [
       ...new Set(contacts.map(c => c.equipe).filter(Boolean))
     ].sort((a, b) => a.localeCompare(b, 'fr'));
-
     res.json({ equipes });
   } catch (err) {
     console.error('equipes error:', err.message);
     res.status(500).json({ error: 'Impossible de charger les équipes.' });
   }
-});
-
-app.get('/api/debug', async (req, res) => {
-  const raw = await fetchAllContacts();
-  const sample = raw.slice(0, 3).map(c => ({
-    id: c.id,
-    prenom: c.first_name,
-    nom: c.last_name,
-    custom_fields: c.custom_fields,
-  }));
-  res.json(sample);
 });
 
 app.listen(PORT, () =>
