@@ -609,7 +609,10 @@
     <span class="enfance">ENFANCE</span>
   </div>
   <div class="header-right">
-    <span class="event-badge">⚡ Angers 2026</span>
+    <div style="display:flex;gap:6px;">
+      <button class="event-badge" id="badge-angers" onclick="switchEvent('angers')" style="cursor:pointer;font-weight:700;">⚡ Angers</button>
+      <button class="event-badge" id="badge-joue" onclick="switchEvent('joue')" style="cursor:pointer;background:var(--gray-100);color:var(--gray-500);border-color:var(--gray-300);">⚡ Joué</button>
+    </div>
   </div>
 </header>
 
@@ -678,6 +681,15 @@
     </div>
   </div>
 
+  <!-- Message Joué dossards -->
+  <div id="joue-dossard-msg" style="display:none;">
+    <div style="background:var(--white);border-radius:var(--radius);padding:2rem;box-shadow:var(--shadow);text-align:center;margin-bottom:1.5rem;">
+      <div style="font-size:2.5rem;margin-bottom:1rem;">🎽</div>
+      <h3 style="font-family:'Antonio',sans-serif;font-size:1.3rem;color:var(--text);margin-bottom:0.5rem;">Dossards non encore attribués</h3>
+      <p style="color:var(--gray-500);font-size:0.9rem;">Les dossards Joué-lès-Tours seront disponibles prochainement.</p>
+    </div>
+  </div>
+
   <section id="results-section" aria-live="polite" aria-label="Résultats de recherche">
     <div id="results-content"></div>
   </section>
@@ -687,23 +699,38 @@
 <section id="page-resultats" style="display:none;" aria-label="Résultats de la course">
   <div class="hero" style="margin-bottom:1.5rem;">
     <h1>🏆 <span>Résultats</span></h1>
-    <p>Classements coureurs et équipes — Défi Enfance Angers 2026</p>
+    <p id="resultats-subtitle">Classements coureurs et équipes — Défi Enfance Angers 2026</p>
   </div>
 
-  <div class="search-card">
-    <div class="resultats-tabs">
-      <button class="res-tab active" id="tab-coureurs" onclick="showResTab('coureurs')">🏃 Coureurs</button>
-      <button class="res-tab" id="tab-equipes" onclick="showResTab('equipes')">🏆 Équipes</button>
+  <!-- Résultats Angers -->
+  <div id="res-angers-section">
+    <div class="search-card">
+      <div class="resultats-tabs">
+        <button class="res-tab active" id="tab-coureurs" onclick="showResTab('coureurs')">🏃 Coureurs</button>
+        <button class="res-tab" id="tab-equipes" onclick="showResTab('equipes')">🏆 Équipes</button>
+      </div>
+      <div id="res-coureurs">
+        <div id="podium-coureurs"></div>
+        <div id="liste-coureurs"><div class="no-resultats"><div class="icon">⏳</div><p>Chargement des résultats...</p></div></div>
+      </div>
+      <div id="res-equipes" style="display:none;">
+        <div id="podium-equipes"></div>
+        <div id="liste-equipes"><div class="no-resultats"><div class="icon">⏳</div><p>Chargement des résultats...</p></div></div>
+      </div>
     </div>
+  </div>
 
-    <div id="res-coureurs">
-      <div id="podium-coureurs"></div>
-      <div id="liste-coureurs"><div class="no-resultats"><div class="icon">⏳</div><p>Chargement des résultats...</p></div></div>
-    </div>
-
-    <div id="res-equipes" style="display:none;">
-      <div id="podium-equipes"></div>
-      <div id="liste-equipes"><div class="no-resultats"><div class="icon">⏳</div><p>Chargement des résultats...</p></div></div>
+  <!-- Résultats Joué -->
+  <div id="res-joue-section" style="display:none;">
+    <div style="background:var(--white);border-radius:var(--radius);padding:2.5rem 2rem;box-shadow:var(--shadow);text-align:center;">
+      <div style="font-size:2.5rem;margin-bottom:1rem;">🏆</div>
+      <h3 style="font-family:'Antonio',sans-serif;font-size:1.4rem;color:var(--text);margin-bottom:0.75rem;">Le classement sera accessible rapidement après la course !</h3>
+      <p style="color:var(--gray-500);font-size:0.9rem;line-height:1.6;margin-bottom:1.5rem;">En attendant, faites décoller vos collectes pour l'enfance !</p>
+      <a href="https://defienfance.fr/suivre-la-collecte-defi-enfance/?de_view=runners&de_event=36956"
+         target="_blank"
+         style="display:inline-block;background:linear-gradient(135deg,var(--magenta),var(--orange-vif));color:white;text-decoration:none;padding:12px 28px;border-radius:99px;font-weight:700;font-size:0.9rem;">
+        ❤️ Suivre la collecte Défi Enfance
+      </a>
     </div>
   </div>
 </section>
@@ -1026,6 +1053,50 @@
 
   // Ajouter id à la section dossard pour la navigation
   document.querySelector('main').id = 'page-dossard';
+
+  // ── Switcher Angers / Joué ────────────────────────────────────────────────
+  let currentEvent = 'angers';
+
+  function switchEvent(event) {
+    currentEvent = event;
+    const isAngers = event === 'angers';
+
+    // Badges
+    document.getElementById('badge-angers').style.background   = isAngers ? 'var(--orange-pale)' : 'var(--gray-100)';
+    document.getElementById('badge-angers').style.color        = isAngers ? 'var(--orange-vif)'  : 'var(--gray-500)';
+    document.getElementById('badge-angers').style.borderColor  = isAngers ? 'var(--orange)'      : 'var(--gray-300)';
+    document.getElementById('badge-angers').style.fontWeight   = isAngers ? '700' : '500';
+    document.getElementById('badge-joue').style.background     = !isAngers ? 'var(--orange-pale)' : 'var(--gray-100)';
+    document.getElementById('badge-joue').style.color          = !isAngers ? 'var(--orange-vif)'  : 'var(--gray-500)';
+    document.getElementById('badge-joue').style.borderColor    = !isAngers ? 'var(--orange)'      : 'var(--gray-300)';
+    document.getElementById('badge-joue').style.fontWeight     = !isAngers ? '700' : '500';
+
+    // Sous-titres
+    document.getElementById('hero-subtitle').textContent = isAngers
+      ? 'Recherche par nom, prénom ou équipe pour Défi Enfance Angers 2026'
+      : 'Défi Enfance Joué-lès-Tours 2026';
+
+    // Section dossard
+    const searchCard = document.querySelector('.search-card');
+    const joueMsg    = document.getElementById('joue-dossard-msg');
+    const resSection = document.getElementById('results-section');
+    if (isAngers) {
+      if (searchCard) searchCard.style.display = 'block';
+      joueMsg.style.display = 'none';
+    } else {
+      if (searchCard) searchCard.style.display = 'none';
+      joueMsg.style.display = 'block';
+      if (resSection) resSection.style.display = 'none';
+    }
+
+    // Section résultats si ouverte
+    document.getElementById('res-angers-section').style.display = isAngers  ? 'block' : 'none';
+    document.getElementById('res-joue-section').style.display   = !isAngers ? 'block' : 'none';
+    const sub = document.getElementById('resultats-subtitle');
+    if (sub) sub.textContent = isAngers
+      ? 'Classements coureurs et équipes — Défi Enfance Angers 2026'
+      : 'Classements coureurs et équipes — Défi Enfance Joué-lès-Tours 2026';
+  }
 </script>
 </body>
 </html>
