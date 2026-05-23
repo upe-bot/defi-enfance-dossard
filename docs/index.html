@@ -608,15 +608,23 @@
     <span class="defi">Défi</span>
     <span class="enfance">ENFANCE</span>
   </div>
-  <div class="header-right">
-    <div style="display:flex;gap:6px;">
-      <button class="event-badge" id="badge-angers" onclick="switchEvent('angers')" style="cursor:pointer;font-weight:700;">⚡ Angers</button>
-      <button class="event-badge" id="badge-joue" onclick="switchEvent('joue')" style="cursor:pointer;background:var(--gray-100);color:var(--gray-500);border-color:var(--gray-300);">⚡ Joué</button>
-    </div>
-  </div>
+  <div class="header-right"></div>
 </header>
 
 <main>
+  <!-- Sélecteur événement -->
+  <div style="display:flex;gap:10px;margin-bottom:1rem;">
+    <button id="badge-angers" onclick="switchEvent('angers')"
+      style="flex:1;padding:14px 10px;border:2px solid var(--magenta);border-radius:12px;background:var(--magenta);color:white;font-family:'Antonio',sans-serif;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;">
+      ⚡ Angers
+    </button>
+    <button id="badge-joue" onclick="switchEvent('joue')"
+      style="flex:1;padding:14px 10px;border:2px solid var(--gray-300);border-radius:12px;background:var(--white);color:var(--gray-500);font-family:'Antonio',sans-serif;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;">
+      ⚡ Joué-lès-Tours
+    </button>
+  </div>
+
+  <!-- Navigation dossard / résultats -->
   <div class="page-nav" role="tablist" aria-label="Navigation">
     <button class="page-btn active" id="btn-page-dossard" onclick="showPage('dossard')">🎽 Mon dossard</button>
     <button class="page-btn" id="btn-page-resultats" onclick="showPage('resultats')">🏆 Résultats</button>
@@ -931,13 +939,15 @@
       if (searchCard) searchCard.style.display = 'none';
       if (hero) hero.style.display = 'none';
       document.getElementById('results-section').style.display = 'none';
+      document.getElementById('joue-dossard-msg').style.display = 'none'; // masquer msg dossard Joué
       pageResultats.style.display = 'block';
       btnDossard.classList.remove('active');
       btnResultats.classList.add('active');
       if (!resultatsLoaded) loadResultats();
     } else {
-      if (searchCard) searchCard.style.display = 'block';
+      if (searchCard) searchCard.style.display = currentEvent === 'angers' ? 'block' : 'none';
       if (hero) hero.style.display = 'block';
+      document.getElementById('joue-dossard-msg').style.display = currentEvent === 'joue' ? 'block' : 'none';
       pageResultats.style.display = 'none';
       btnDossard.classList.add('active');
       btnResultats.classList.remove('active');
@@ -1061,35 +1071,39 @@
     currentEvent = event;
     const isAngers = event === 'angers';
 
-    // Badges
-    document.getElementById('badge-angers').style.background   = isAngers ? 'var(--orange-pale)' : 'var(--gray-100)';
-    document.getElementById('badge-angers').style.color        = isAngers ? 'var(--orange-vif)'  : 'var(--gray-500)';
-    document.getElementById('badge-angers').style.borderColor  = isAngers ? 'var(--orange)'      : 'var(--gray-300)';
-    document.getElementById('badge-angers').style.fontWeight   = isAngers ? '700' : '500';
-    document.getElementById('badge-joue').style.background     = !isAngers ? 'var(--orange-pale)' : 'var(--gray-100)';
-    document.getElementById('badge-joue').style.color          = !isAngers ? 'var(--orange-vif)'  : 'var(--gray-500)';
-    document.getElementById('badge-joue').style.borderColor    = !isAngers ? 'var(--orange)'      : 'var(--gray-300)';
-    document.getElementById('badge-joue').style.fontWeight     = !isAngers ? '700' : '500';
+    // Boutons événement
+    const bA = document.getElementById('badge-angers');
+    const bJ = document.getElementById('badge-joue');
+    bA.style.background   = isAngers  ? 'var(--magenta)'  : 'var(--white)';
+    bA.style.color        = isAngers  ? 'white'           : 'var(--gray-500)';
+    bA.style.borderColor  = isAngers  ? 'var(--magenta)'  : 'var(--gray-300)';
+    bJ.style.background   = !isAngers ? 'var(--magenta)'  : 'var(--white)';
+    bJ.style.color        = !isAngers ? 'white'           : 'var(--gray-500)';
+    bJ.style.borderColor  = !isAngers ? 'var(--magenta)'  : 'var(--gray-300)';
 
     // Sous-titres
-    document.getElementById('hero-subtitle').textContent = isAngers
+    const heroSub = document.getElementById('hero-subtitle');
+    if (heroSub) heroSub.textContent = isAngers
       ? 'Recherche par nom, prénom ou équipe pour Défi Enfance Angers 2026'
-      : 'Défi Enfance Joué-lès-Tours 2026';
+      : 'Dossards et résultats — Défi Enfance Joué-lès-Tours 2026';
 
-    // Section dossard
-    const searchCard = document.querySelector('.search-card');
-    const joueMsg    = document.getElementById('joue-dossard-msg');
-    const resSection = document.getElementById('results-section');
-    if (isAngers) {
-      if (searchCard) searchCard.style.display = 'block';
-      joueMsg.style.display = 'none';
-    } else {
-      if (searchCard) searchCard.style.display = 'none';
-      joueMsg.style.display = 'block';
-      if (resSection) resSection.style.display = 'none';
+    // Page dossard
+    const pageDossardVisible = document.getElementById('page-resultats').style.display === 'none';
+    if (pageDossardVisible) {
+      const searchCard = document.querySelector('.search-card');
+      const joueMsg    = document.getElementById('joue-dossard-msg');
+      const resSection = document.getElementById('results-section');
+      if (isAngers) {
+        if (searchCard) searchCard.style.display = 'block';
+        joueMsg.style.display = 'none';
+      } else {
+        if (searchCard) searchCard.style.display = 'none';
+        joueMsg.style.display = 'block';
+        if (resSection) resSection.style.display = 'none';
+      }
     }
 
-    // Section résultats si ouverte
+    // Page résultats
     document.getElementById('res-angers-section').style.display = isAngers  ? 'block' : 'none';
     document.getElementById('res-joue-section').style.display   = !isAngers ? 'block' : 'none';
     const sub = document.getElementById('resultats-subtitle');
