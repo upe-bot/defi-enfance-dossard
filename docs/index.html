@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Défi Enfance #Angers 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --magenta:      #fb0089;
+      --magenta-dark: #c40070;
+      --magenta-light:#fde6f3;
+      --orange-vif:   #ef6135;
+      --orange:       #ff8533;
+      --orange-light: #ff9b57;
+      --orange-pale:  #fff4ee;
+      --white:        #ffffff;
+      --gray-50:      #f9f9f9;
+      --gray-100:     #f1f1f1;
+      --gray-300:     #cccccc;
+      --gray-500:     #888888;
+      --gray-700:     #444444;
+      --text:         #1a1a1a;
+      --radius:       12px;
+      --shadow:       0 4px 24px rgba(0,0,0,0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--gray-50);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--white);
+      border-bottom: 3px solid var(--magenta);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 12px rgba(251,0,137,0.08);
+    }
+
+    .header-logo {
+      display: flex;
+      flex-direction: column;
+      line-height: 1;
+    }
+
+    .header-logo .defi {
+      font-family: 'Antonio', sans-serif;
+      font-size: 1.6rem;
+      color: var(--magenta);
+      letter-spacing: -1px;
+    }
+
+    .header-logo .enfance {
+      font-family: 'Antonio', sans-serif;
+      font-size: 2rem;
+      color: var(--orange-vif);
+      letter-spacing: -1px;
+      margin-top: -6px;
+    }
+
+    .header-right {
+      margin-left: auto;
+      text-align: right;
+    }
+
+    .header-right .event-badge {
+      background: var(--orange-pale);
+      color: var(--orange-vif);
+      border: 1.5px solid var(--orange);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .hands-icon {
+      width: 56px;
+      height: 56px;
+      flex-shrink: 0;
+    }
+
+    main {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .hero h1 {
+      font-family: 'Antonio', sans-serif;
+      font-size: 2rem;
+      color: var(--text);
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+    }
+
+    .hero h1 span {
+      color: var(--magenta);
+    }
+
+    .hero p {
+      color: var(--gray-500);
+      font-size: 0.92rem;
+    }
+
+    .search-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1.5rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 1.5rem;
+      background: var(--gray-100);
+      border-radius: 10px;
+      padding: 4px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 0.6rem 0.5rem;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--gray-500);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      background: var(--white);
+      color: var(--magenta);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+      font-weight: 600;
+    }
+
+    .tab:hover:not(.active) {
+      color: var(--text);
+    }
+
+    .search-row {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .search-input-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-input-wrap svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray-300);
+      pointer-events: none;
+    }
+
+    input[type="text"],
+    select {
+      width: 100%;
+      height: 52px;
+      padding: 0 1rem 0 2.8rem;
+      border: 2px solid var(--gray-100);
+      border-radius: 10px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.95rem;
+      color: var(--text);
+      background: var(--gray-50);
+      outline: none;
+      transition: border-color 0.2s;
+      appearance: none;
+    }
+
+    select {
+      padding-left: 2.8rem;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 2.5rem;
+    }
+
+    input[type="text"]:focus,
+    select:focus {
+      border-color: var(--magenta);
+      background: var(--white);
+    }
+
+    .btn-search {
+      height: 52px;
+      padding: 0 1.5rem;
+      background: var(--magenta);
+      color: var(--white);
+      border: none;
+      border-radius: 10px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-search:hover { background: var(--magenta-dark); }
+    .btn-search:active { transform: scale(0.97); }
+    .btn-search:disabled { background: var(--gray-300); cursor: not-allowed; }
+
+    .hint {
+      margin-top: 0.75rem;
+      font-size: 0.78rem;
+      color: var(--gray-500);
+      text-align: center;
+    }
+
+    #results-section { display: none; }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .results-title {
+      font-family: 'Antonio', sans-serif;
+      font-size: 1.3rem;
+      color: var(--text);
+    }
+
+    .results-count {
+      background: var(--magenta-light);
+      color: var(--magenta-dark);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .runner-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 2px solid var(--gray-100);
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .runner-card:hover {
+      border-color: var(--orange-light);
+      box-shadow: 0 4px 16px rgba(239,97,53,0.1);
+    }
+
+    .dossard-badge {
+      min-width: 72px;
+      height: 72px;
+      background: var(--magenta);
+      color: var(--white);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dossard-badge::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: var(--orange);
+    }
+
+    .dossard-badge .num {
+      font-family: 'Antonio', sans-serif;
+      font-size: 1.8rem;
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+
+    .dossard-badge .label {
+      font-size: 0.58rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      opacity: 0.85;
+      text-transform: uppercase;
+    }
+
+    .runner-info { flex: 1; min-width: 0; }
+
+    .runner-name {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .runner-name .prenom { color: var(--magenta); }
+
+    .runner-meta {
+      font-size: 0.8rem;
+      color: var(--gray-500);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .team-tag {
+      background: var(--orange-pale);
+      color: var(--orange-vif);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--gray-500);
+    }
+
+    .no-results .icon { font-size: 3rem; margin-bottom: 1rem; }
+    .no-results h3 { font-size: 1rem; color: var(--gray-700); margin-bottom: 0.5rem; }
+    .no-results p { font-size: 0.85rem; }
+
+    .loading {
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--gray-100);
+      border-top-color: var(--magenta);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+      background: #fff0f5;
+      border: 1.5px solid #ffc2de;
+      color: var(--magenta-dark);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    .team-group-header {
+      background: linear-gradient(135deg, var(--orange-vif), var(--orange));
+      color: var(--white);
+      border-radius: 10px;
+      padding: 0.75rem 1.25rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .team-group-header .team-name {
+      font-family: 'Antonio', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 0.5px;
+    }
+
+    .team-group-header .team-count {
+      margin-left: auto;
+      background: rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      font-size: 0.78rem;
+      color: var(--gray-300);
+    }
+
+
+    /* ── Navigation pages ── */
+    .page-nav {
+      display: flex;
+      gap: 0;
+      margin-bottom: 2rem;
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 4px;
+      box-shadow: var(--shadow);
+    }
+    .page-btn {
+      flex: 1;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--gray-500);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .page-btn.active {
+      background: var(--magenta);
+      color: var(--white);
+      box-shadow: 0 2px 8px rgba(251,0,137,0.3);
+    }
+
+    /* ── Résultats ── */
+    .resultats-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 1.5rem;
+      background: var(--gray-100);
+      border-radius: 10px;
+      padding: 4px;
+    }
+    .res-tab {
+      flex: 1;
+      padding: 0.6rem;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--gray-500);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .res-tab.active {
+      background: var(--white);
+      color: var(--orange-vif);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+      font-weight: 600;
+    }
+
+    .podium {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 12px;
+      margin-bottom: 2rem;
+      padding: 1.5rem 1rem;
+      background: linear-gradient(135deg, #fff4ee, #fde6f3);
+      border-radius: var(--radius);
+    }
+    .podium-place {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .podium-medal { font-size: 2rem; }
+    .podium-name {
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-align: center;
+      max-width: 80px;
+      color: var(--text);
+    }
+    .podium-km {
+      font-family: 'Antonio', sans-serif;
+      font-size: 1.1rem;
+      color: var(--orange-vif);
+    }
+    .podium-block {
+      background: var(--white);
+      border-radius: 8px 8px 0 0;
+      width: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Antonio', sans-serif;
+      font-size: 1.5rem;
+      color: var(--gray-500);
+      box-shadow: var(--shadow);
+    }
+    .podium-block.p1 { height: 80px; background: linear-gradient(135deg, #FFD700, #FFA500); color: white; }
+    .podium-block.p2 { height: 60px; background: linear-gradient(135deg, #C0C0C0, #A0A0A0); color: white; }
+    .podium-block.p3 { height: 45px; background: linear-gradient(135deg, #CD7F32, #A0522D); color: white; }
+
+    .rank-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 2px solid var(--gray-100);
+      padding: 0.9rem 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.6rem;
+      transition: border-color 0.2s;
+    }
+    .rank-card:hover { border-color: var(--orange-light); }
+    .rank-num {
+      font-family: 'Antonio', sans-serif;
+      font-size: 1.4rem;
+      color: var(--gray-300);
+      min-width: 36px;
+      text-align: center;
+    }
+    .rank-num.top1 { color: #FFD700; }
+    .rank-num.top2 { color: #C0C0C0; }
+    .rank-num.top3 { color: #CD7F32; }
+    .rank-info { flex: 1; min-width: 0; }
+    .rank-name { font-weight: 600; font-size: 0.92rem; color: var(--text); }
+    .rank-name .prenom { color: var(--magenta); }
+    .rank-meta { font-size: 0.76rem; color: var(--gray-500); margin-top: 2px; }
+    .rank-km {
+      font-family: 'Antonio', sans-serif;
+      font-size: 1.3rem;
+      color: var(--orange-vif);
+      white-space: nowrap;
+    }
+    .rank-km span { font-size: 0.7rem; font-family: 'Poppins', sans-serif; color: var(--gray-500); }
+
+    .medal-defi {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, var(--magenta), var(--orange-vif));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .no-resultats {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--gray-500);
+    }
+    .no-resultats .icon { font-size: 3rem; margin-bottom: 1rem; }
+
+    @media (max-width: 480px) {    @media (max-width: 480px) {
+      .header-logo .defi { font-size: 1.2rem; }
+      .header-logo .enfance { font-size: 1.5rem; }
+      .hands-icon { width: 44px; height: 44px; }
+      .tab { font-size: 0.72rem; padding: 0.5rem 0.3rem; }
+      .search-row { flex-direction: column; }
+      .btn-search { height: 48px; justify-content: center; }
+      .dossard-badge { min-width: 60px; height: 60px; }
+      .dossard-badge .num { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg class="hands-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <ellipse cx="40" cy="58" rx="26" ry="16" fill="#ef6135" opacity="0.2"/>
+    <rect x="28" y="20" width="10" height="32" rx="5" fill="#ff8533"/>
+    <rect x="38" y="16" width="9" height="36" rx="4.5" fill="#ef6135"/>
+    <rect x="47" y="18" width="9" height="34" rx="4.5" fill="#ff9b57"/>
+    <rect x="19" y="24" width="10" height="30" rx="5" fill="#ff8533"/>
+    <line x1="26" y1="12" x2="22" y2="6" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+    <line x1="40" y1="10" x2="40" y2="4" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+    <line x1="54" y1="12" x2="58" y2="6" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+  </svg>
+  <div class="header-logo">
+    <span class="defi">Défi</span>
+    <span class="enfance">ENFANCE</span>
+  </div>
+  <div class="header-right">
+    <span class="event-badge">⚡ Angers 2026</span>
+  </div>
+</header>
+
+<main>
+  <div class="page-nav" role="tablist" aria-label="Navigation">
+    <button class="page-btn active" id="btn-page-dossard" onclick="showPage('dossard')">🎽 Mon dossard</button>
+    <button class="page-btn" id="btn-page-resultats" onclick="showPage('resultats')">🏆 Résultats</button>
+  </div>
+
+  <div class="search-card">
+    <div class="tabs" role="tablist" aria-label="Mode de recherche">
+      <button class="tab active" role="tab" data-mode="nom" aria-selected="true">
+        👤 Nom / Prénom
+      </button>
+      <button class="tab" role="tab" data-mode="equipe" aria-selected="false">
+        🏃 Équipe
+      </button>
+    </div>
+
+    <div id="search-nom">
+      <div class="search-row">
+        <div class="search-input-wrap">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            type="text"
+            id="input-nom"
+            placeholder="Dupont, Marie, …"
+            autocomplete="off"
+            autocapitalize="words"
+            maxlength="60"
+            aria-label="Nom ou prénom"
+          />
+        </div>
+        <button class="btn-search" id="btn-search-nom" aria-label="Rechercher">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          Chercher
+        </button>
+      </div>
+      <p class="hint">Entrez au moins 2 caractères</p>
+    </div>
+
+    <div id="search-equipe" style="display:none;">
+      <div class="search-row">
+        <div class="search-input-wrap">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <select id="select-equipe" aria-label="Nom de l'équipe">
+            <option value="">— Choisir une équipe —</option>
+          </select>
+        </div>
+        <button class="btn-search" id="btn-search-equipe" aria-label="Voir les dossards de l'équipe">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          Voir l'équipe
+        </button>
+      </div>
+      <p class="hint" id="equipe-hint">Chargement des équipes…</p>
+    </div>
+  </div>
+
+  <section id="results-section" aria-live="polite" aria-label="Résultats de recherche">
+    <div id="results-content"></div>
+  </section>
+</main>
+
+
+<section id="page-resultats" style="display:none;" aria-label="Résultats de la course">
+  <div class="hero" style="margin-bottom:1.5rem;">
+    <h1>🏆 <span>Résultats</span></h1>
+    <p>Classements coureurs et équipes — Défi Enfance Angers 2026</p>
+  </div>
+
+  <div class="search-card">
+    <div class="resultats-tabs">
+      <button class="res-tab active" id="tab-coureurs" onclick="showResTab('coureurs')">🏃 Coureurs</button>
+      <button class="res-tab" id="tab-equipes" onclick="showResTab('equipes')">🏆 Équipes</button>
+    </div>
+
+    <div id="res-coureurs">
+      <div id="podium-coureurs"></div>
+      <div id="liste-coureurs"><div class="no-resultats"><div class="icon">⏳</div><p>Chargement des résultats...</p></div></div>
+    </div>
+
+    <div id="res-equipes" style="display:none;">
+      <div id="podium-equipes"></div>
+      <div id="liste-equipes"><div class="no-resultats"><div class="icon">⏳</div><p>Chargement des résultats...</p></div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Défi Enfance · Angers 2026 · Générateur de victoires pour l'enfance
+</footer>
+
+<script>
+  const API_BASE = 'https://defi-enfance-dossard-api.onrender.com';
+
+  const tabs         = document.querySelectorAll('.tab');
+  const sectionNom   = document.getElementById('search-nom');
+  const sectionEq    = document.getElementById('search-equipe');
+  const inputNom     = document.getElementById('input-nom');
+  const btnNom       = document.getElementById('btn-search-nom');
+  const selectEq     = document.getElementById('select-equipe');
+  const btnEq        = document.getElementById('btn-search-equipe');
+  const resultsSection = document.getElementById('results-section');
+  const resultsContent = document.getElementById('results-content');
+  const equipeHint   = document.getElementById('equipe-hint');
+
+  let currentMode = 'nom';
+  let equipesLoaded = false;
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+      currentMode = tab.dataset.mode;
+      sectionNom.style.display = currentMode === 'nom' ? 'block' : 'none';
+      sectionEq.style.display  = currentMode === 'equipe' ? 'block' : 'none';
+      clearResults();
+      if (currentMode === 'equipe' && !equipesLoaded) loadEquipes();
+    });
+  });
+
+  async function loadEquipes() {
+    try {
+      equipeHint.textContent = 'Chargement des équipes…';
+      const res = await fetch(`${API_BASE}/api/equipes`);
+      const data = await res.json();
+      if (data.equipes && data.equipes.length > 0) {
+        data.equipes.forEach(eq => {
+          const opt = document.createElement('option');
+          opt.value = eq;
+          opt.textContent = eq;
+          selectEq.appendChild(opt);
+        });
+        equipeHint.textContent = `${data.equipes.length} équipe(s) disponible(s)`;
+        equipesLoaded = true;
+      } else {
+        equipeHint.textContent = 'Aucune équipe trouvée.';
+      }
+    } catch {
+      equipeHint.textContent = 'Impossible de charger les équipes.';
+    }
+  }
+
+  function clearResults() {
+    resultsSection.style.display = 'none';
+    resultsContent.innerHTML = '';
+  }
+
+  function showLoading() {
+    resultsSection.style.display = 'block';
+    resultsContent.innerHTML = `
+      <div class="loading">
+        <div class="spinner" aria-hidden="true"></div>
+        <p style="color:#888;font-size:0.9rem;">Recherche en cours…</p>
+      </div>`;
+  }
+
+  function showError(msg) {
+    resultsContent.innerHTML = `<div class="error-msg">⚠️ ${msg}</div>`;
+  }
+
+  function pad(n, len = 3) {
+    return String(n).padStart(len, '0');
+  }
+
+  function renderRunnerCard(runner) {
+    const equipeTag = runner.equipe
+      ? `<span class="team-tag">🏃 ${escHtml(runner.equipe)}</span>`
+      : '';
+    return `
+      <div class="runner-card">
+        <div class="dossard-badge" aria-label="Dossard ${runner.dossard}">
+          <span class="num">${pad(runner.dossard)}</span>
+          <span class="label">dossard</span>
+        </div>
+        <div class="runner-info">
+          <div class="runner-name">
+            <span class="prenom">${escHtml(runner.prenom)}</span>
+            ${runner.prenom && runner.nom ? ' ' : ''}${escHtml(runner.nom)}
+          </div>
+          <div class="runner-meta">
+            ${equipeTag}
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function escHtml(str) {
+    return String(str || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function showResults(data, isEquipe = false) {
+    const { results, count, query } = data;
+    resultsSection.style.display = 'block';
+
+    if (!results || results.length === 0) {
+      resultsContent.innerHTML = `
+        <div class="no-results">
+          <div class="icon">🔍</div>
+          <h3>Aucun dossard trouvé</h3>
+          <p>Vérifie l'orthographe ou contacte l'organisation.</p>
+        </div>`;
+      return;
+    }
+
+    let html = `
+      <div class="results-header">
+        <span class="results-title">${isEquipe ? 'Équipe' : 'Résultats'}</span>
+        <span class="results-count">${count} coureur${count > 1 ? 's' : ''}</span>
+      </div>`;
+
+    if (isEquipe) {
+      html += `
+        <div class="team-group-header">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" aria-hidden="true">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span class="team-name">${escHtml(query)}</span>
+          <span class="team-count">${count} coureur${count > 1 ? 's' : ''}</span>
+        </div>`;
+    }
+
+    results.forEach(r => { html += renderRunnerCard(r); });
+    resultsContent.innerHTML = html;
+  }
+
+  async function doSearch() {
+    if (currentMode === 'nom') {
+      const q = inputNom.value.trim();
+      if (q.length < 2) {
+        inputNom.focus();
+        inputNom.style.borderColor = 'var(--magenta)';
+        setTimeout(() => { inputNom.style.borderColor = ''; }, 1500);
+        return;
+      }
+      showLoading();
+      try {
+        const res = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(q)}&type=nom`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+        showResults(data, false);
+      } catch (e) {
+        showError(e.message || 'Impossible de contacter le serveur.');
+      }
+    } else {
+      const eq = selectEq.value;
+      if (!eq) return;
+      showLoading();
+      try {
+        const res = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(eq)}&type=equipe`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+        showResults(data, true);
+      } catch (e) {
+        showError(e.message || 'Impossible de contacter le serveur.');
+      }
+    }
+  }
+
+  btnNom.addEventListener('click', doSearch);
+  btnEq.addEventListener('click', doSearch);
+  inputNom.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+  selectEq.addEventListener('change', () => { if (selectEq.value) clearResults(); });
+
+  // ── Navigation pages ──────────────────────────────────────────────────────
+  let resultatsLoaded = false;
+  let currentResTab = 'coureurs';
+  let resultatsData = { coureurs: [], equipes: [] };
+
+  function showPage(page) {
+    const pageDossard   = document.getElementById('page-dossard') || document.querySelector('section[aria-label="Résultats de recherche"]')?.parentElement;
+    const pageResultats = document.getElementById('page-resultats');
+    const btnDossard    = document.getElementById('btn-page-dossard');
+    const btnResultats  = document.getElementById('btn-page-resultats');
+    const searchCard    = document.querySelector('.search-card');
+    const hero          = document.querySelector('.hero');
+
+    if (page === 'resultats') {
+      if (searchCard) searchCard.style.display = 'none';
+      if (hero) hero.style.display = 'none';
+      document.getElementById('results-section').style.display = 'none';
+      pageResultats.style.display = 'block';
+      btnDossard.classList.remove('active');
+      btnResultats.classList.add('active');
+      if (!resultatsLoaded) loadResultats();
+    } else {
+      if (searchCard) searchCard.style.display = 'block';
+      if (hero) hero.style.display = 'block';
+      pageResultats.style.display = 'none';
+      btnDossard.classList.add('active');
+      btnResultats.classList.remove('active');
+    }
+  }
+
+  function showResTab(tab) {
+    currentResTab = tab;
+    document.getElementById('res-coureurs').style.display = tab === 'coureurs' ? 'block' : 'none';
+    document.getElementById('res-equipes').style.display  = tab === 'equipes'  ? 'block' : 'none';
+    document.getElementById('tab-coureurs').classList.toggle('active', tab === 'coureurs');
+    document.getElementById('tab-equipes').classList.toggle('active', tab === 'equipes');
+  }
+
+  function medailleRank(rank) {
+    if (rank === 1) return '🥇';
+    if (rank === 2) return '🥈';
+    if (rank === 3) return '🥉';
+    return '🏅';
+  }
+
+  function topClass(rank) {
+    if (rank === 1) return 'top1';
+    if (rank === 2) return 'top2';
+    if (rank === 3) return 'top3';
+    return '';
+  }
+
+  function renderPodium(top3, type) {
+    if (!top3 || top3.length === 0) return '';
+    const order = [1, 0, 2]; // argent, or, bronze
+    const heights = ['p2', 'p1', 'p3'];
+    let html = '<div class="podium">';
+    order.forEach((idx, pos) => {
+      const item = top3[idx];
+      if (!item) return;
+      const nom = type === 'coureur'
+        ? `${escHtml(item.prenom)}<br>${escHtml(item.nom)}`
+        : escHtml(item.equipe);
+      const sousTitre = type === 'coureur'
+        ? `${item.equipe ? `<div style="font-size:0.65rem;color:var(--orange-vif);margin-top:2px">🏃 ${escHtml(item.equipe)}</div>` : ''}
+           ${item.asso  ? `<div style="font-size:0.62rem;color:var(--magenta);margin-top:1px">❤️ ${escHtml(item.asso)}</div>`  : ''}`
+        : '';
+      html += `<div class="podium-place">
+        <div class="podium-medal">${medailleRank(idx + 1)}</div>
+        <div class="podium-name">${nom}${sousTitre}</div>
+        <div class="podium-km">${item.km} <small>km</small></div>
+        <div class="podium-block ${heights[pos]}">${idx + 1}</div>
+      </div>`;
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function renderListeCoureurs(coureurs) {
+    if (!coureurs || coureurs.length === 0) {
+      return '<div class="no-resultats"><div class="icon">🏃</div><h3>Pas encore de résultats</h3><p>Les résultats seront disponibles après la course.</p></div>';
+    }
+    return coureurs.slice(3).map(c => `
+      <div class="rank-card">
+        <div class="rank-num ${topClass(c.classement)}">${c.classement || '—'}</div>
+        <div class="medal-defi">🏅</div>
+        <div class="rank-info">
+          <div class="rank-name"><span class="prenom">${escHtml(c.prenom)}</span> ${escHtml(c.nom)}</div>
+          <div class="rank-meta">
+            ${c.dossard ? `Dossard ${pad(c.dossard)}` : ''}
+            ${c.dossard && c.equipe ? ' · ' : ''}
+            ${c.equipe ? `<span class="team-tag">🏃 ${escHtml(c.equipe)}</span>` : ''}
+            ${c.asso ? `<div style="font-size:0.73rem;color:var(--magenta);margin-top:3px">❤️ ${escHtml(c.asso)}</div>` : ''}
+          </div>
+        </div>
+        <div class="rank-km">${c.km} <span>km</span></div>
+      </div>`).join('');
+  }
+
+  function renderListeEquipes(equipes) {
+    if (!equipes || equipes.length === 0) {
+      return '<div class="no-resultats"><div class="icon">🏆</div><h3>Pas encore de résultats</h3><p>Les résultats seront disponibles après la course.</p></div>';
+    }
+    return equipes.slice(3).map(e => `
+      <div class="rank-card">
+        <div class="rank-num ${topClass(e.classement)}">${e.classement || '—'}</div>
+        <div class="medal-defi">🏅</div>
+        <div class="rank-info">
+          <div class="rank-name">${escHtml(e.equipe)}</div>
+        </div>
+        <div class="rank-km">${e.km} <span>km</span></div>
+      </div>`).join('');
+  }
+
+  async function loadResultats() {
+    try {
+      const res  = await fetch(`${API_BASE}/api/resultats`);
+      const data = await res.json();
+      resultatsData   = data;
+      resultatsLoaded = true;
+
+      // Coureurs
+      const top3C = (data.coureurs || []).slice(0, 3);
+      document.getElementById('podium-coureurs').innerHTML  = renderPodium(top3C, 'coureur');
+      document.getElementById('liste-coureurs').innerHTML   = renderListeCoureurs(data.coureurs || []);
+
+      // Équipes
+      const top3E = (data.equipes || []).slice(0, 3);
+      document.getElementById('podium-equipes').innerHTML   = renderPodium(top3E, 'equipe');
+      document.getElementById('liste-equipes').innerHTML    = renderListeEquipes(data.equipes || []);
+
+    } catch (err) {
+      document.getElementById('liste-coureurs').innerHTML =
+        '<div class="no-resultats"><div class="icon">⚠️</div><p>Impossible de charger les résultats.</p></div>';
+    }
+  }
+
+  // Ajouter id à la section dossard pour la navigation
+  document.querySelector('main').id = 'page-dossard';
+</script>
+</body>
+</html>
