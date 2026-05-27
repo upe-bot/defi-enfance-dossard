@@ -1143,7 +1143,7 @@
       const res  = await fetch(url);
       const data = await res.json();
       if (!data.results || data.results.length === 0) {
-        document.getElementById('joue-results-content').innerHTML = '<div class="no-results"><div class="icon">🔍</div><h3>Aucun dossard trouvé</h3><p>Vérifie l'orthographe.</p></div>';
+        document.getElementById('joue-results-content').innerHTML = '<div class="no-results"><div class="icon">🔍</div><h3>Aucun dossard trouvé</h3><p>Vérifie l&#39;orthographe.</p></div>';
         return;
       }
       let html = `<div class="results-header"><span class="results-title">${joueModeActuel === 'equipe' ? 'Équipe' : 'Résultats'}</span><span class="results-count">${data.count} coureur${data.count > 1 ? 's' : ''}</span></div>`;
