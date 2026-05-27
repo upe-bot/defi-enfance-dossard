@@ -689,13 +689,45 @@
     </div>
   </div>
 
-  <!-- Message Joué dossards -->
+  <!-- Section dossards Joué -->
   <div id="joue-dossard-msg" style="display:none;">
-    <div style="background:var(--white);border-radius:var(--radius);padding:2rem;box-shadow:var(--shadow);text-align:center;margin-bottom:1.5rem;">
-      <div style="font-size:2.5rem;margin-bottom:1rem;">🎽</div>
-      <h3 style="font-family:'Antonio',sans-serif;font-size:1.3rem;color:var(--text);margin-bottom:0.5rem;">Dossards non encore attribués</h3>
-      <p style="color:var(--gray-500);font-size:0.9rem;">Les dossards Joué-lès-Tours seront disponibles prochainement.</p>
+    <div class="search-card">
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-mode-joue="nom" id="joue-tab-nom">👤 Nom / Prénom</button>
+        <button class="tab" data-mode-joue="equipe" id="joue-tab-equipe">🏃 Équipe</button>
+      </div>
+      <div id="joue-search-nom">
+        <div class="search-row">
+          <div class="search-input-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="joue-input-nom" placeholder="Dupont, Marie, …" autocomplete="off" maxlength="60"/>
+          </div>
+          <button class="btn-search" id="joue-btn-nom">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Chercher
+          </button>
+        </div>
+        <p class="hint">Entrez au moins 2 caractères</p>
+      </div>
+      <div id="joue-search-equipe" style="display:none;">
+        <div class="search-row">
+          <div class="search-input-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <select id="joue-select-equipe">
+              <option value="">— Choisir une équipe —</option>
+            </select>
+          </div>
+          <button class="btn-search" id="joue-btn-equipe">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Voir l'équipe
+          </button>
+        </div>
+        <p class="hint" id="joue-equipe-hint">Chargement des équipes…</p>
+      </div>
     </div>
+    <section id="joue-results-section" aria-live="polite">
+      <div id="joue-results-content"></div>
+    </section>
   </div>
 
   <section id="results-section" aria-live="polite" aria-label="Résultats de recherche">
@@ -1063,6 +1095,68 @@
 
   // Ajouter id à la section dossard pour la navigation
   document.querySelector('main').id = 'page-dossard';
+
+  // ── Logique recherche Joué ────────────────────────────────────────────────
+  let joueEquipesLoaded = false;
+  let joueModeActuel = 'nom';
+
+  // Tabs Joué
+  document.querySelectorAll('[data-mode-joue]').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('[data-mode-joue]').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      joueModeActuel = tab.dataset.modeJoue;
+      document.getElementById('joue-search-nom').style.display    = joueModeActuel === 'nom'    ? 'block' : 'none';
+      document.getElementById('joue-search-equipe').style.display = joueModeActuel === 'equipe' ? 'block' : 'none';
+      document.getElementById('joue-results-section').style.display = 'none';
+      if (joueModeActuel === 'equipe' && !joueEquipesLoaded) loadEquipesJoue();
+    });
+  });
+
+  async function loadEquipesJoue() {
+    try {
+      document.getElementById('joue-equipe-hint').textContent = 'Chargement des équipes…';
+      const res  = await fetch(`${API_BASE}/api/equipes-joue`);
+      const data = await res.json();
+      const sel  = document.getElementById('joue-select-equipe');
+      (data.equipes || []).forEach(eq => {
+        const opt = document.createElement('option');
+        opt.value = eq; opt.textContent = eq;
+        sel.appendChild(opt);
+      });
+      document.getElementById('joue-equipe-hint').textContent = `${(data.equipes||[]).length} équipe(s)`;
+      joueEquipesLoaded = true;
+    } catch { document.getElementById('joue-equipe-hint').textContent = 'Impossible de charger les équipes.'; }
+  }
+
+  async function doSearchJoue() {
+    const q    = joueModeActuel === 'nom'
+      ? document.getElementById('joue-input-nom').value.trim()
+      : document.getElementById('joue-select-equipe').value;
+    if (!q || q.length < 2) return;
+
+    document.getElementById('joue-results-section').style.display = 'block';
+    document.getElementById('joue-results-content').innerHTML = '<div class="loading"><div class="spinner"></div><p style="color:#888;font-size:0.9rem;">Recherche…</p></div>';
+
+    try {
+      const url  = `${API_BASE}/api/search-joue?q=${encodeURIComponent(q)}&type=${joueModeActuel}`;
+      const res  = await fetch(url);
+      const data = await res.json();
+      if (!data.results || data.results.length === 0) {
+        document.getElementById('joue-results-content').innerHTML = '<div class="no-results"><div class="icon">🔍</div><h3>Aucun dossard trouvé</h3><p>Vérifie l'orthographe.</p></div>';
+        return;
+      }
+      let html = `<div class="results-header"><span class="results-title">${joueModeActuel === 'equipe' ? 'Équipe' : 'Résultats'}</span><span class="results-count">${data.count} coureur${data.count > 1 ? 's' : ''}</span></div>`;
+      data.results.forEach(r => { html += renderRunnerCard(r); });
+      document.getElementById('joue-results-content').innerHTML = html;
+    } catch {
+      document.getElementById('joue-results-content').innerHTML = '<div class="error-msg">⚠️ Erreur serveur.</div>';
+    }
+  }
+
+  document.getElementById('joue-btn-nom').addEventListener('click', doSearchJoue);
+  document.getElementById('joue-btn-equipe').addEventListener('click', doSearchJoue);
+  document.getElementById('joue-input-nom').addEventListener('keydown', e => { if (e.key === 'Enter') doSearchJoue(); });
 
   // ── Switcher Angers / Joué ────────────────────────────────────────────────
   let currentEvent = 'angers';
