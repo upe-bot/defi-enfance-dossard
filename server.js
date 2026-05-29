@@ -635,7 +635,12 @@ app.get('/api/seed-joue', async (req, res) => {
     {"id": "joue_571", "prenom": "Maëlle", "nom": "Tougeron", "dossard": 571, "equipe": "Union pour l'Enfance 37 - UPE", "event": "joue"},
     {"id": "joue_572", "prenom": "Nathan", "nom": "Douady Massé", "dossard": 572, "equipe": "Union pour l'Enfance", "event": "joue"},
     {"id": "joue_573", "prenom": "Guénaël", "nom": "Bourdilleau", "dossard": 573, "equipe": "Union pour l'Enfance 37 - UPE", "event": "joue"},
-    {"id": "joue_574", "prenom": "Erwann", "nom": "Bourdilleau", "dossard": 574, "equipe": "Union pour l'Enfance", "event": "joue"}];
+    {"id": "joue_574", "prenom": "Erwann", "nom": "Bourdilleau", "dossard": 574, "equipe": "Union pour l'Enfance", "event": "joue"},
+    {"id": "joue_575", "prenom": "Alexandre", "nom": "Suisse De Ste Claire", "dossard": 575, "equipe": "IDEF 37", "event": "joue"},
+    {"id": "joue_576", "prenom": "Chaima", "nom": "Laabadi", "dossard": 576, "equipe": "La Montgolfière - UPE", "event": "joue"},
+    {"id": "joue_577", "prenom": "Alix", "nom": "Thiot", "dossard": 577, "equipe": "Les Cahutes de Louise", "event": "joue"},
+    {"id": "joue_578", "prenom": "Florian", "nom": "Djafri", "dossard": 578, "equipe": "Les Cahutes de Louise", "event": "joue"},
+    {"id": "joue_579", "prenom": "Malika", "nom": "Hamdaoui", "dossard": 579, "equipe": "IDEF 37", "event": "joue"}];
 
     const ok = await saveToRedis_key('defi_enfance_dossards_joue', JSON.stringify(COUREURS_JOUE), 30 * 24 * 60 * 60);
     console.log(`${COUREURS_JOUE.length} coureurs Joué sauvegardés dans Redis.`);
