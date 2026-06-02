@@ -1181,36 +1181,6 @@
       const data = await res.json();
       resultatsJoueLoaded = true;
 
-      const top3C = (data.coureurs || []).slice(0, 3);
-      document.getElementById('podium-coureurs-joue').innerHTML = renderPodium(top3C, 'coureur');
-      document.getElementById('liste-coureurs-joue').innerHTML  = renderListeCoureurs(data.coureurs || []);
-
-      const top3E = (data.equipes || []).slice(0, 3);
-      document.getElementById('podium-equipes-joue').innerHTML  = renderPodium(top3E, 'equipe');
-      document.getElementById('liste-equipes-joue').innerHTML   = renderListeEquipes(data.equipes || []);
-    } catch (err) {
-      document.getElementById('liste-coureurs-joue').innerHTML =
-        '<div class="no-resultats"><div class="icon">⚠️</div><p>Impossible de charger les résultats.</p></div>';
-    }
-  }
-
-  // ── Résultats Joué ───────────────────────────────────────────────────────
-  let resultatsJoueLoaded = false;
-
-  function showResTabJoue(tab) {
-    document.getElementById('res-coureurs-joue').style.display = tab === 'coureurs' ? 'block' : 'none';
-    document.getElementById('res-equipes-joue').style.display  = tab === 'equipes'  ? 'block' : 'none';
-    document.getElementById('tab-coureurs-joue').classList.toggle('active', tab === 'coureurs');
-    document.getElementById('tab-equipes-joue').classList.toggle('active', tab === 'equipes');
-  }
-
-  async function loadResultatsJoue() {
-    if (resultatsJoueLoaded) return;
-    try {
-      const res  = await fetch(`${API_BASE}/api/resultats-joue`);
-      const data = await res.json();
-      resultatsJoueLoaded = true;
-
       // Coureurs
       const top3C = (data.coureurs || []).slice(0, 3);
       document.getElementById('podium-coureurs-joue').innerHTML = renderPodium(top3C, 'coureur');
