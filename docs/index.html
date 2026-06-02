@@ -1209,9 +1209,8 @@
       const nom = type === 'coureur'
         ? `${escHtml(item.prenom)}<br>${escHtml(item.nom)}`
         : escHtml(item.equipe);
-      const kmInfo = item.km_reels !== undefined && item.km_reels !== item.km
-        ? `${item.km} km (${item.km_reels} réels)`
-        : `${item.km} km`;
+      const kmReels = item.km_reels !== undefined ? item.km_reels : item.km;
+      const kmInfo = `${item.km} km <small style="font-size:0.7rem;opacity:0.8">(cl.r ${item.classement_reel} · ${kmReels} km réels)</small>`;
       html += `<div class="podium-place">
         <div class="podium-medal">${medailleRank(idx + 1)}</div>
         <div class="podium-name">${nom}</div>
@@ -1229,9 +1228,8 @@
       return '<div class="no-resultats"><div class="icon">🏃</div><h3>Pas encore de résultats</h3></div>';
     }
     return coureurs.slice(3).map(c => {
-      const kmInfo = c.km_reels !== undefined && c.km_reels !== c.km
-        ? `${c.km} km totaux <span style="color:var(--gray-400)">(cl. réel ${c.classement_reel} · ${c.km_reels} km réels)</span>`
-        : `${c.km} km`;
+      const kmReels = c.km_reels !== undefined ? c.km_reels : c.km;
+      const kmInfo = `${c.km} km totaux <span style="color:var(--gray-400)">(cl. réel ${c.classement_reel} · ${kmReels} km réels)</span>`;
       return `
       <div class="rank-card">
         <div class="rank-num ${topClass(c.classement)}">${c.classement || '—'}</div>
@@ -1257,10 +1255,12 @@
     order.forEach((idx, pos) => {
       const item = top3[idx];
       if (!item) return;
+      const kmReelsEq = item.km_reels !== undefined ? item.km_reels : item.km;
       html += `<div class="podium-place">
         <div class="podium-medal">${medailleRank(idx + 1)}</div>
         <div class="podium-name">${escHtml(item.equipe)}</div>
-        <div class="podium-km">${item.km} <small>km</small></div>
+        <div class="podium-km" style="font-size:0.9rem">${item.km} km</div>
+        <div style="font-size:0.62rem;color:rgba(255,255,255,0.8);margin-top:-2px">cl.r ${item.classement_reel} · ${kmReelsEq} km réels</div>
         <div class="podium-block ${heights[pos]}">${idx + 1}</div>
       </div>`;
     });
