@@ -1181,10 +1181,11 @@
       const data = await res.json();
       resultatsJoueLoaded = true;
 
-      // Coureurs
-      const top3C = (data.coureurs || []).slice(0, 3);
-      document.getElementById('podium-coureurs-joue').innerHTML = renderPodium(top3C, 'coureur');
-      document.getElementById('liste-coureurs-joue').innerHTML  = renderListeCoureurs(data.coureurs || []);
+      // Coureurs — trier par classement bonus (classement officiel)
+      const coureursTries = (data.coureurs || []).slice().sort((a, b) => (a.classement || 9999) - (b.classement || 9999));
+      const top3C = coureursTries.slice(0, 3);
+      document.getElementById('podium-coureurs-joue').innerHTML = renderPodiumJoue(top3C, 'coureur');
+      document.getElementById('liste-coureurs-joue').innerHTML  = renderListeCoureurJoue(coureursTries);
 
       // Équipes — utiliser km_reels pour l'affichage secondaire
       const top3E = (data.equipes || []).slice(0, 3);
@@ -1194,6 +1195,58 @@
       document.getElementById('liste-coureurs-joue').innerHTML =
         '<div class="no-resultats"><div class="icon">⚠️</div><p>Impossible de charger les résultats.</p></div>';
     }
+  }
+
+  // Podium coureurs Joué : classement bonus + km totaux, entre parenthèses classement réel + km réels
+  function renderPodiumJoue(top3, type) {
+    if (!top3 || top3.length === 0) return '';
+    const order = [1, 0, 2];
+    const heights = ['p2', 'p1', 'p3'];
+    let html = '<div class="podium">';
+    order.forEach((idx, pos) => {
+      const item = top3[idx];
+      if (!item) return;
+      const nom = type === 'coureur'
+        ? `${escHtml(item.prenom)}<br>${escHtml(item.nom)}`
+        : escHtml(item.equipe);
+      const kmInfo = item.km_reels !== undefined && item.km_reels !== item.km
+        ? `${item.km} km (${item.km_reels} réels)`
+        : `${item.km} km`;
+      html += `<div class="podium-place">
+        <div class="podium-medal">${medailleRank(idx + 1)}</div>
+        <div class="podium-name">${nom}</div>
+        <div class="podium-km" style="font-size:0.95rem">${kmInfo}</div>
+        <div class="podium-block ${heights[pos]}">${idx + 1}</div>
+      </div>`;
+    });
+    html += '</div>';
+    return html;
+  }
+
+  // Liste coureurs Joué : classement bonus + km totaux principaux, réel entre parenthèses
+  function renderListeCoureurJoue(coureurs) {
+    if (!coureurs || coureurs.length === 0) {
+      return '<div class="no-resultats"><div class="icon">🏃</div><h3>Pas encore de résultats</h3></div>';
+    }
+    return coureurs.slice(3).map(c => {
+      const kmInfo = c.km_reels !== undefined && c.km_reels !== c.km
+        ? `${c.km} km totaux <span style="color:var(--gray-400)">(cl. réel ${c.classement_reel} · ${c.km_reels} km réels)</span>`
+        : `${c.km} km`;
+      return `
+      <div class="rank-card">
+        <div class="rank-num ${topClass(c.classement)}">${c.classement || '—'}</div>
+        <div class="medal-defi">🏅</div>
+        <div class="rank-info">
+          <div class="rank-name"><span class="prenom">${escHtml(c.prenom)}</span> ${escHtml(c.nom)}</div>
+          <div class="rank-meta">
+            ${c.dossard ? `Dossard ${pad(c.dossard)}` : ''}
+            ${c.dossard && c.equipe ? ' · ' : ''}
+            ${c.equipe ? `🏃 ${escHtml(c.equipe)}` : ''}
+          </div>
+        </div>
+        <div class="rank-km" style="font-size:0.9rem;text-align:right">${kmInfo}</div>
+      </div>`;
+    }).join('');
   }
 
   function renderPodiumEquipesJoue(top3) {
@@ -1225,7 +1278,9 @@
         <div class="medal-defi">🏅</div>
         <div class="rank-info">
           <div class="rank-name">${escHtml(e.equipe)}</div>
-          <div class="rank-meta">${e.km_reels} km réels · ${e.km} km totaux</div>
+          <div class="rank-meta" style="font-size:0.72rem;color:var(--gray-500)">
+            cl. réel ${e.classement_reel} · ${e.km_reels} km réels
+          </div>
         </div>
         <div class="rank-km">${e.km} <span>km</span></div>
       </div>`).join('');
