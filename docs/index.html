@@ -767,6 +767,18 @@
         <button class="res-tab active" id="tab-coureurs-joue" onclick="showResTabJoue('coureurs')">🏃 Coureurs</button>
         <button class="res-tab" id="tab-equipes-joue" onclick="showResTabJoue('equipes')">🏆 Équipes</button>
       </div>
+      <!-- Barre de recherche résultats Joué -->
+      <div id="joue-res-search" style="margin-bottom:1rem;">
+        <div class="search-row" style="gap:8px;">
+          <div class="search-input-wrap" style="flex:1;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="joue-res-input" placeholder="Nom, équipe ou asso soutenue…" autocomplete="off" maxlength="60"
+              oninput="filterResultatsJoue()" style="font-size:0.85rem;"/>
+          </div>
+          <button onclick="document.getElementById('joue-res-input').value='';filterResultatsJoue();"
+            style="padding:8px 12px;border:none;border-radius:8px;background:var(--gray-100);color:var(--gray-500);cursor:pointer;font-size:0.8rem;">✕</button>
+        </div>
+      </div>
       <div id="res-coureurs-joue">
         <div id="podium-coureurs-joue"></div>
         <div id="liste-coureurs-joue"><div class="no-resultats"><div class="icon">⏳</div><p>Chargement...</p></div></div>
@@ -1053,7 +1065,7 @@
             ${c.dossard ? `Dossard ${pad(c.dossard)}` : ''}
             ${c.dossard && c.equipe ? ' · ' : ''}
             ${c.equipe ? `<span class="team-tag">🏃 ${escHtml(c.equipe)}</span>` : ''}
-            ${c.km_reels !== undefined && c.km_reels !== c.km ? `<div style="font-size:0.72rem;color:var(--gray-500);margin-top:2px">${c.km_reels} km réels · ${c.km} km totaux</div>` : ''}
+            ${c.asso ? `<div style="font-size:0.72rem;color:var(--magenta);margin-top:2px">❤️ ${escHtml(c.asso)}</div>` : ''}
             ${c.asso ? `<div style="font-size:0.73rem;color:var(--magenta);margin-top:3px">❤️ ${escHtml(c.asso)}</div>` : ''}
           </div>
         </div>
@@ -1174,12 +1186,42 @@
     document.getElementById('tab-equipes-joue').classList.toggle('active', tab === 'equipes');
   }
 
+  function filterResultatsJoue() {
+    const term = document.getElementById('joue-res-input').value.trim().toLowerCase();
+    if (!resultatsJoueLoaded) return;
+
+    with open('/home/claude/resultats_joue_complet.json') as f:
+    let coureurs = (window._joueData?.coureurs || []).slice().sort((a, b) => (a.classement || 9999) - (b.classement || 9999));
+    let equipes  = window._joueData?.equipes || [];
+
+    if (term.length >= 2) {
+      coureurs = coureurs.filter(c =>
+        c.nom.toLowerCase().includes(term) ||
+        c.prenom.toLowerCase().includes(term) ||
+        (c.equipe || '').toLowerCase().includes(term) ||
+        (c.asso || '').toLowerCase().includes(term)
+      );
+      equipes = equipes.filter(e =>
+        (e.equipe || '').toLowerCase().includes(term)
+      );
+    }
+
+    const top3C = coureurs.slice(0, 3);
+    document.getElementById('podium-coureurs-joue').innerHTML = term ? '' : renderPodiumJoue(top3C, 'coureur');
+    document.getElementById('liste-coureurs-joue').innerHTML  = renderListeCoureurJoue(coureurs, term ? 0 : 3);
+
+    const top3E = equipes.slice(0, 3);
+    document.getElementById('podium-equipes-joue').innerHTML  = term ? '' : renderPodiumEquipesJoue(top3E);
+    document.getElementById('liste-equipes-joue').innerHTML   = renderListeEquipesJoue(equipes, term ? 0 : 3);
+  }
+
   async function loadResultatsJoue() {
     if (resultatsJoueLoaded) return;
     try {
       const res  = await fetch(`${API_BASE}/api/resultats-joue`);
       const data = await res.json();
       resultatsJoueLoaded = true;
+      window._joueData = data;
 
       // Coureurs — trier par classement bonus (classement officiel)
       const coureursTries = (data.coureurs || []).slice().sort((a, b) => (a.classement || 9999) - (b.classement || 9999));
@@ -1187,7 +1229,7 @@
       document.getElementById('podium-coureurs-joue').innerHTML = renderPodiumJoue(top3C, 'coureur');
       document.getElementById('liste-coureurs-joue').innerHTML  = renderListeCoureurJoue(coureursTries);
 
-      // Équipes — utiliser km_reels pour l'affichage secondaire
+      // Équipes
       const top3E = (data.equipes || []).slice(0, 3);
       document.getElementById('podium-equipes-joue').innerHTML  = renderPodiumEquipesJoue(top3E);
       document.getElementById('liste-equipes-joue').innerHTML   = renderListeEquipesJoue(data.equipes || []);
@@ -1223,11 +1265,11 @@
   }
 
   // Liste coureurs Joué : classement bonus + km totaux principaux, réel entre parenthèses
-  function renderListeCoureurJoue(coureurs) {
+  function renderListeCoureurJoue(coureurs, offset = 3) {
     if (!coureurs || coureurs.length === 0) {
-      return '<div class="no-resultats"><div class="icon">🏃</div><h3>Pas encore de résultats</h3></div>';
+      return '<div class="no-resultats"><div class="icon">🔍</div><h3>Aucun résultat</h3></div>';
     }
-    return coureurs.slice(3).map(c => {
+    return coureurs.slice(offset).map(c => {
       const kmReels = c.km_reels !== undefined ? c.km_reels : c.km;
       const kmInfo = `${c.km} km totaux <span style="color:var(--gray-400)">(cl. réel ${c.classement_reel} · ${kmReels} km réels)</span>`;
       return `
@@ -1260,7 +1302,7 @@
         <div class="podium-medal">${medailleRank(idx + 1)}</div>
         <div class="podium-name">${escHtml(item.equipe)}</div>
         <div class="podium-km" style="font-size:0.9rem">${item.km} km</div>
-        <div style="font-size:0.62rem;color:rgba(255,255,255,0.8);margin-top:-2px">cl.r ${item.classement_reel} · ${kmReelsEq} km réels</div>
+        <div style="font-size:0.68rem;color:var(--gray-500);margin-top:2px">cl. réel ${item.classement_reel} · ${kmReelsEq} km réels</div>
         <div class="podium-block ${heights[pos]}">${idx + 1}</div>
       </div>`;
     });
@@ -1268,11 +1310,11 @@
     return html;
   }
 
-  function renderListeEquipesJoue(equipes) {
+  function renderListeEquipesJoue(equipes, offset = 3) {
     if (!equipes || equipes.length === 0) {
-      return '<div class="no-resultats"><div class="icon">🏆</div><h3>Pas encore de résultats</h3></div>';
+      return '<div class="no-resultats"><div class="icon">🔍</div><h3>Aucun résultat</h3></div>';
     }
-    return equipes.slice(3).map(e => `
+    return equipes.slice(offset).map(e => `
       <div class="rank-card">
         <div class="rank-num ${topClass(e.classement)}">${e.classement || '—'}</div>
         <div class="medal-defi">🏅</div>
