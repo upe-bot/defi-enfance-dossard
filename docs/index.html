@@ -1190,7 +1190,6 @@
     const term = document.getElementById('joue-res-input').value.trim().toLowerCase();
     if (!resultatsJoueLoaded) return;
 
-    with open('/home/claude/resultats_joue_complet.json') as f:
     let coureurs = (window._joueData?.coureurs || []).slice().sort((a, b) => (a.classement || 9999) - (b.classement || 9999));
     let equipes  = window._joueData?.equipes || [];
 
